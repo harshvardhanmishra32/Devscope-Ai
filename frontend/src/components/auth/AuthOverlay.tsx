@@ -44,6 +44,13 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
+  // Check if backend is reachable
+  const isNetworkError = (err: any) =>
+    err instanceof TypeError ||
+    err.message?.toLowerCase().includes('failed to fetch') ||
+    err.message?.toLowerCase().includes('network') ||
+    err.message?.toLowerCase().includes('fetch');
+
   // Standard Email/Password Sign In
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +64,7 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
     try {
       const response = await fetch(`${apiUrl}/api/v1/auth/token`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
       });
 
@@ -73,9 +78,9 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     } catch (err: any) {
-      // If backend is unreachable, offer demo mode automatically
-      if (err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed to fetch')) {
-        setError('Backend offline — click "Try Demo" below to explore with sample data.');
+      if (isNetworkError(err)) {
+        // Backend offline — silently log in as demo user
+        handleDemoLogin();
       } else {
         setError(err.message || 'Failed to sign in. Please try again.');
       }
@@ -96,7 +101,6 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
     setError(null);
 
     try {
-      // Step 1: Create account
       const signupRes = await fetch(`${apiUrl}/api/v1/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,7 +112,6 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
         throw new Error(errData.detail || 'Account creation failed. Email may already be registered.');
       }
 
-      // Step 2: Auto sign in
       const tokenRes = await fetch(`${apiUrl}/api/v1/auth/token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -122,7 +125,12 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || 'Failed to create account. Please try again.');
+      if (isNetworkError(err)) {
+        // Backend offline — silently log in as demo user
+        handleDemoLogin();
+      } else {
+        setError(err.message || 'Failed to create account. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -191,7 +199,11 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || 'Google Sign-In failed. Please try again.');
+      if (isNetworkError(err)) {
+        handleDemoLogin();
+      } else {
+        setError(err.message || 'Google Sign-In failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
