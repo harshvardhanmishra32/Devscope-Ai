@@ -3,19 +3,29 @@
 @tailwind utilities;
 
 :root {
-  --background: #030712; /* Rich dark background */
-  --foreground: #f9fafb; /* Off-white text */
-  --card: rgba(17, 24, 39, 0.7); /* Translucent dark gray */
-  --border: rgba(255, 255, 255, 0.08); /* Minimal white border */
-  --accent: #6366f1; /* Indigo */
+  --background: #030712;
+  --foreground: #f9fafb;
+  --card: rgba(17, 24, 39, 0.7);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #6366f1;
   --accent-glow: rgba(99, 102, 241, 0.15);
 }
 
+/* iOS Safari fix: background-attachment:fixed breaks on mobile */
 body {
   color: var(--foreground);
-  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 60%);
-  background-attachment: fixed;
+  background: #030712;
   font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030712 60%);
+  pointer-events: none;
 }
 
 /* Glassmorphism Styles */
@@ -38,6 +48,21 @@ body {
   text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
 }
 
+/* animate-fadeIn — used in github and resume pages */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out forwards;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -52,4 +77,12 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #4b5563;
+}
+
+/* Accessibility: respect user's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 interface Message {
@@ -17,6 +17,12 @@ export default function InterviewSimulator() {
   const [loading, setLoading] = useState(false);
   const [interviewId, setInterviewId] = useState("");
   const [finished, setFinished] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to latest message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   if (!isReady) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -96,58 +102,45 @@ export default function InterviewSimulator() {
         throw new Error("Unable to submit response.");
       }
     } catch (err) {
-      // Mock conversation loop fallback logic
+      // Mock conversation loop — fixed stale closure using functional update
       setTimeout(() => {
-        const userReplies = [...messages.filter(m => m.role === 'user'), { role: 'user', text: userMsg }];
-        const userRepliesCount = userReplies.length;
-        
-        if (userRepliesCount >= 3) {
-          // Calculate dynamic score based on all answers
-          const allText = userReplies.map(m => m.text).join(" ").toLowerCase();
-          
-          // Count words
-          const totalWords = allText.split(/\s+/).filter(Boolean).length;
-          
-          // Keywords matching
-          const keywords = ["async", "await", "concurrency", "thread", "process", "loop", "redis", "database", "scale", "balancer", "cache", "shard", "postgres", "design", "team", "engineer", "culture"];
-          let matchCount = 0;
-          keywords.forEach(kw => {
-            if (allText.includes(kw)) matchCount++;
-          });
-          
-          // Ignorance count
-          const ignorancePhrases = ["don't know", "do not know", "no idea", "not sure", "dunno", "skip", "pass", "forgot", "no clue"];
-          let ignoranceCount = 0;
-          ignorancePhrases.forEach(phrase => {
-            if (allText.includes(phrase)) ignoranceCount++;
-          });
-          
-          let calculatedScore = 55; // Base score
-          calculatedScore -= ignoranceCount * 15;
-          calculatedScore += matchCount * 6;
-          
-          // Length bonus
-          if (totalWords > 40) {
-            calculatedScore += 10;
-          } else if (totalWords < 12) {
-            calculatedScore -= 20;
+        setMessages(prev => {
+          const allMsgs = [...prev, { role: 'user' as const, text: userMsg }];
+          const userRepliesCount = allMsgs.filter(m => m.role === 'user').length;
+
+          if (userRepliesCount >= 3) {
+            const allText = allMsgs
+              .filter(m => m.role === 'user')
+              .map(m => m.text)
+              .join(' ')
+              .toLowerCase();
+
+            const totalWords = allText.split(/\s+/).filter(Boolean).length;
+            const keywords = ['async', 'await', 'concurrency', 'thread', 'process', 'loop', 'redis',
+              'database', 'scale', 'balancer', 'cache', 'shard', 'postgres', 'design', 'team', 'engineer'];
+            const matchCount = keywords.filter(kw => allText.includes(kw)).length;
+            const ignorancePhrases = ["don't know", 'no idea', 'not sure', 'dunno', 'skip', 'forgot'];
+            const ignoranceCount = ignorancePhrases.filter(p => allText.includes(p)).length;
+
+            let score = 55 + matchCount * 6 - ignoranceCount * 15;
+            if (totalWords > 40) score += 10;
+            else if (totalWords < 12) score -= 20;
+            score = Math.max(15, Math.min(95, score));
+
+            setFinished(true);
+            return [...allMsgs, {
+              role: 'interviewer' as const,
+              text: `Thank you for completing this mock interview. Your score is ${score}%.`
+            }];
           }
-          
-          // Clamping score
-          calculatedScore = Math.max(15, Math.min(95, calculatedScore));
-          
-          setMessages(prev => [...prev, { 
-            role: 'interviewer', 
-            text: `Thank you for completing this mock interview. I've compiled your evaluation. Your score is ${calculatedScore}%.` 
-          }]);
-          setFinished(true);
-        } else {
+
           const followUps = [
-            "Good point. How do you handle concurrency race conditions under this approach?",
-            "Understood. How would you monitor and track error logs for this in production?"
+            'Good point. How do you handle concurrency race conditions under this approach?',
+            'Understood. How would you monitor and track error logs for this in production?'
           ];
-          setMessages(prev => [...prev, { role: 'interviewer', text: followUps[userRepliesCount - 1] }]);
-        }
+          const nextQ = followUps[userRepliesCount - 1] ?? 'Great. Let us wrap up here — thank you for your time.';
+          return [...allMsgs, { role: 'interviewer' as const, text: nextQ }];
+        });
         setLoading(false);
       }, 1000);
       return;
@@ -228,6 +221,8 @@ export default function InterviewSimulator() {
                 Thinking...
               </div>
             )}
+            {/* Auto-scroll anchor */}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Submission Row */}
@@ -251,7 +246,7 @@ export default function InterviewSimulator() {
           ) : (
           <div className="border-t border-white/5 p-6 text-center bg-green-500/5 flex items-center justify-center gap-3">
               <button
-                onClick={() => { setSessionStarted(false); setMessages([]); setFinished(false); setInterviewId(''); }}
+                onClick={() => { setSessionStarted(false); setMessages([]); setFinished(false); setInterviewId(''); setCurrentInput(''); }}
                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition-all"
               >
                 New Session

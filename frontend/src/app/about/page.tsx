@@ -2,22 +2,24 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuthGuard } from '@/hooks/useAuthGuard';
 
 export default function AboutPage() {
-  const { isReady } = useAuthGuard();
   const [copied, setCopied] = useState(false);
-
-  if (!isReady) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-    </div>
-  );
 
   const email = "harshvardhanmishra31@gmail.com";
 
-  const handleCopyEmail = () => {
-    navigator.clipboard.writeText(email);
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+    } catch {
+      // Fallback for browsers without clipboard API
+      const el = document.createElement('textarea');
+      el.value = email;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

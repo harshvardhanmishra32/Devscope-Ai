@@ -16,11 +16,33 @@ export default function ResumeIntelligence() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ResumeAnalysis | null>(null);
+  const [error, setError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+
+  const validateAndSetFile = (f: File) => {
+    setError('');
+    if (f.type !== 'application/pdf' && !f.name.endsWith('.pdf')) {
+      setError('Only PDF files are accepted.');
+      return;
+    }
+    if (f.size > 5 * 1024 * 1024) {
+      setError('File size must be under 5MB.');
+      return;
+    }
+    setFile(f);
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      validateAndSetFile(e.target.files[0]);
     }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const dropped = e.dataTransfer.files[0];
+    if (dropped) validateAndSetFile(dropped);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -89,12 +111,21 @@ export default function ResumeIntelligence() {
       </div>
 
       {/* Upload Box */}
-      <form onSubmit={handleUpload} className="glass-panel rounded-xl p-8 flex flex-col items-center gap-6 border-dashed border-2 border-white/10 hover:border-indigo-500/30 transition-all">
+      <form
+        onSubmit={handleUpload}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragEnter={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+        className={`glass-panel rounded-xl p-8 flex flex-col items-center gap-6 border-dashed border-2 transition-all ${
+          isDragging ? 'border-indigo-500/70 bg-indigo-500/5' : 'border-white/10 hover:border-indigo-500/30'
+        }`}
+      >
         <div className="flex flex-col items-center gap-2 text-center">
-          <svg className="w-12 h-12 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className={`w-12 h-12 transition-colors ${isDragging ? 'text-indigo-400' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
-          <span className="text-sm font-semibold text-gray-300">Drag and drop your PDF resume here</span>
+          <span className="text-sm font-semibold text-gray-300">{isDragging ? 'Drop your PDF here!' : 'Drag and drop your PDF resume here'}</span>
           <span className="text-xs text-gray-500">Supports PDF format up to 5MB</span>
         </div>
 
@@ -123,6 +154,13 @@ export default function ResumeIntelligence() {
           </button>
         )}
       </form>
+
+      {/* Error Display */}
+      {error && (
+        <div className="glass-panel rounded-xl px-4 py-3 border border-red-500/30 bg-red-500/5 text-red-400 text-sm text-center">
+          {error}
+        </div>
+      )}
 
       {/* Analysis Output */}
       {data && (

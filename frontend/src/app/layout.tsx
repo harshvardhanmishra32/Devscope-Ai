@@ -1,11 +1,31 @@
 import React from 'react';
+import { Inter, Outfit } from 'next/font/google';
 import AppWrapper from '@/components/layout/AppWrapper';
 import NavBar from '@/components/layout/NavBar';
 import './globals.css';
 
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['400', '600', '700', '800'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
 export const metadata = {
   title: 'DevScope AI — Developer Intelligence Platform',
   description: 'AI-powered portfolio analyzer, resume evaluator, mock interviewer, and career growth planner.',
+  openGraph: {
+    title: 'DevScope AI',
+    description: 'AI-powered Developer Intelligence Platform by Harshvardhan Mishra',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -14,15 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col justify-between">
         <AppWrapper>
-          {/* Navigation Bar (client component — shows logout when logged in) */}
+          {/* Navigation Bar */}
           <NavBar />
 
           {/* Page Content */}
@@ -32,7 +47,7 @@ export default function RootLayout({
 
           {/* Footer */}
           <footer className="w-full border-t border-white/5 py-6 text-center text-xs text-gray-500">
-            © {new Date().getFullYear()} DevScope AI. Open Source under Apache 2.0.
+            © {new Date().getFullYear()} DevScope AI · Built by Harshvardhan Mishra · Open Source under Apache 2.0
           </footer>
         </AppWrapper>
       </body>

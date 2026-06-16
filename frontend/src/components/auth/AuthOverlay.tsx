@@ -33,7 +33,8 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     }
-  }, [onLoginSuccess]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount only — avoids infinite loop if parent re-renders
 
   // Close on Escape key
   useEffect(() => {
@@ -159,7 +160,11 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || 'Google Sign-In failed. Please try again.');
+      if (isNetworkError(err)) {
+        handleDemoLogin();
+      } else {
+        setError(err.message || 'Google Sign-In failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
