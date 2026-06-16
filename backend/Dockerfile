@@ -1,24 +1,19 @@
-# Stage 1: Build dependencies
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim
 
-WORKDIR /build
+WORKDIR /app
 
+# Copy and install dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Stage 2: Final runtime container
-FROM python:3.12-slim AS runner
+# Copy the entire backend source
+COPY . .
 
-WORKDIR /workspace
-
-# Copy installed libraries from builder stage
-COPY --from=builder /root/.local /root/.local
-COPY . /workspace/backend
-
-ENV PATH=/root/.local/bin:$PATH
+# Set Python path so imports work
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/workspace
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run with app.main:app since WORKDIR is /app (the backend folder)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
