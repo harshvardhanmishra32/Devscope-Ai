@@ -8,18 +8,32 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 
-from backend.app.core.config import settings
-from backend.app.core.database import engine, Base, get_db
-from backend.app.core.auth import get_password_hash, verify_password, create_access_token, get_current_user
-from backend.app.models.models import User, Profile, GithubAccount, Repository, Resume, Report, Interview
-from backend.app.schemas import schemas
-from backend.app.services.github_agent import GithubAgent
-from backend.app.services.resume_agent import ResumeAgent
-from backend.app.services.recruiter_agent import RecruiterAgent
-from backend.app.services.career_coach import CareerCoach
-from backend.app.services.ml_engine import MLEngine
-from backend.app.services.match_engine import MatchEngine
-from backend.app.services.career_twin import CareerTwin
+try:
+    from app.core.config import settings
+    from app.core.database import engine, Base, get_db
+    from app.core.auth import get_password_hash, verify_password, create_access_token, get_current_user
+    from app.models.models import User, Profile, GithubAccount, Repository, Resume, Report, Interview
+    from app.schemas import schemas
+    from app.services.github_agent import GithubAgent
+    from app.services.resume_agent import ResumeAgent
+    from app.services.recruiter_agent import RecruiterAgent
+    from app.services.career_coach import CareerCoach
+    from app.services.ml_engine import MLEngine
+    from app.services.match_engine import MatchEngine
+    from app.services.career_twin import CareerTwin
+except ImportError:
+    from backend.app.core.config import settings
+    from backend.app.core.database import engine, Base, get_db
+    from backend.app.core.auth import get_password_hash, verify_password, create_access_token, get_current_user
+    from backend.app.models.models import User, Profile, GithubAccount, Repository, Resume, Report, Interview
+    from backend.app.schemas import schemas
+    from backend.app.services.github_agent import GithubAgent
+    from backend.app.services.resume_agent import ResumeAgent
+    from backend.app.services.recruiter_agent import RecruiterAgent
+    from backend.app.services.career_coach import CareerCoach
+    from backend.app.services.ml_engine import MLEngine
+    from backend.app.services.match_engine import MatchEngine
+    from backend.app.services.career_twin import CareerTwin
 
 # Initialize database tables on startup (especially helpful for SQLite fallback)
 Base.metadata.create_all(bind=engine)
@@ -34,6 +48,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Health check — required by Render and load balancers
+@app.get(f"{settings.API_V1_STR}/health")
+def health_check():
+    return {"status": "ok", "service": "DevScope AI Backend"}
 
 # Directory to save uploaded resumes
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../uploads")

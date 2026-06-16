@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: devscope-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 10080
+      - key: DATABASE_URL
+        fromDatabase:
+          name: devscope-db
+          property: connectionString
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+    healthCheckPath: /api/v1/health
+
+databases:
+  - name: devscope-db
+    databaseName: devscope
+    user: devscope
+    plan: free
