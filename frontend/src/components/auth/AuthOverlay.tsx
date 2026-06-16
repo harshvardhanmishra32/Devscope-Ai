@@ -73,7 +73,12 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
       setIsAuthenticated(true);
       onLoginSuccess();
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in. Please try again.');
+      // If backend is unreachable, offer demo mode automatically
+      if (err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed to fetch')) {
+        setError('Backend offline — click "Try Demo" below to explore with sample data.');
+      } else {
+        setError(err.message || 'Failed to sign in. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -190,6 +195,15 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
     } finally {
       setLoading(false);
     }
+  };
+
+  // Demo mode — no backend needed, works fully on Vercel
+  const handleDemoLogin = () => {
+    const demoToken = 'demo_mode_token_devscope_ai_' + Date.now();
+    localStorage.setItem('devscope_token', demoToken);
+    localStorage.setItem('devscope_demo_mode', 'true');
+    setIsAuthenticated(true);
+    onLoginSuccess();
   };
 
   if (isAuthenticated) return null;
@@ -359,6 +373,23 @@ export default function AuthOverlay({ onLoginSuccess, onClose }: AuthOverlayProp
                 text="continue_with"
               />
             )}
+          </div>
+
+          {/* Demo Mode — works without backend */}
+          <div className="w-full mt-3">
+            <button
+              type="button"
+              onClick={handleDemoLogin}
+              className="w-full flex items-center justify-center gap-2 py-3 border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-400 hover:text-amber-300 font-bold text-xs uppercase tracking-wider rounded-lg transition-all"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              ⚡ Try Demo — No Login Required
+            </button>
+            <p className="text-[9px] text-gray-600 text-center mt-1.5 font-light">
+              Explore all features instantly with sample AI analysis data
+            </p>
           </div>
 
           {loading && (
