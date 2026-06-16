@@ -33,12 +33,6 @@ export default function GithubScanner() {
   const [data, setData] = useState<GithubData | null>(null);
   const [error, setError] = useState("");
 
-  if (!isReady) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-    </div>
-  );
-
   const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username) return;
@@ -70,7 +64,7 @@ export default function GithubScanner() {
       setTimeout(() => {
         setData({
           username: username,
-          avatar_url: "https://avatars.githubusercontent.com/u/9919?v=4",
+          avatar_url: `https://avatars.githubusercontent.com/${username}`,
           public_repos: 18,
           followers: 45,
           following: 32,
@@ -105,9 +99,16 @@ export default function GithubScanner() {
         setLoading(false);
       }, 1200);
       return;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+  if (!isReady) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-8 py-4 max-w-4xl mx-auto">

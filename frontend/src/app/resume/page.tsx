@@ -17,12 +17,6 @@ export default function ResumeIntelligence() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ResumeAnalysis | null>(null);
 
-  if (!isReady) return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
-    </div>
-  );
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
@@ -75,9 +69,16 @@ export default function ResumeIntelligence() {
         setLoading(false);
       }, 1500);
       return;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
+  if (!isReady) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col gap-8 py-4 max-w-3xl mx-auto">

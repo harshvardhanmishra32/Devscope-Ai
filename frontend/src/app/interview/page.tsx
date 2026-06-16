@@ -156,7 +156,7 @@ export default function InterviewSimulator() {
   };
 
   return (
-    <div className="flex flex-col gap-8 py-4 max-w-3xl mx-auto h-[600px]">
+    <div className="flex flex-col gap-8 py-4 max-w-3xl mx-auto min-h-[600px]">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
