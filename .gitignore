@@ -72,4 +72,14 @@ logs/
 *.pdb
 __snapshots__/
 .turbo/
+
+# ── ML Model binaries (use DVC or direct download instead) ───────────────────
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.pt
+*.pth
+*.onnx
+backend/app/ml_models/
 backend/uploads/
