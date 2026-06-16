@@ -1,0 +1,2657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevScope AI — Developer Intelligence Platform</title>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Three.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            outfit: ['Outfit', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: #020205;
+      overflow-x: hidden;
+    }
+    
+    /* Background Ambient Orbs */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      z-index: -1;
+      opacity: 0.45;
+      animation: float 20s infinite alternate ease-in-out;
+    }
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, #6366f1 0%, transparent 80%);
+      top: -10%;
+      left: -10%;
+    }
+    .orb-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #d946ef 0%, transparent 80%);
+      bottom: -10%;
+      right: -10%;
+      animation-delay: -5s;
+    }
+    .orb-3 {
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, #06b6d4 0%, transparent 80%);
+      top: 40%;
+      left: 30%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.2); }
+    }
+
+    /* 3D Glass Card Design System */
+    .glass-card-3d {
+      background: linear-gradient(135deg, rgba(20, 20, 35, 0.7) 0%, rgba(10, 10, 15, 0.8) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 1px 1px rgba(255, 255, 255, 0.05);
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .glass-card-3d:hover {
+      border-color: rgba(99, 102, 241, 0.45);
+      box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.8),
+        0 0 40px rgba(99, 102, 241, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .float-depth-sm { transform: translateZ(15px); }
+    .float-depth-md { transform: translateZ(30px); }
+    .float-depth-lg { transform: translateZ(45px); }
+
+    .glow-text-indigo { text-shadow: 0 0 15px rgba(99, 102, 241, 0.6); }
+    .glow-text-green { text-shadow: 0 0 15px rgba(34, 197, 94, 0.6); }
+  </style>
+</head>
+<body class="min-h-screen text-gray-200 flex flex-col justify-between">
+
+  <!-- Ambient background shapes -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- Header (Visible only when logged in) -->
+  <header id="main-header" class="hidden sticky top-0 z-50 w-full glass-card-3d border-b border-white/5 py-4 px-6 md:px-12 flex items-center justify-between">
+    <div class="flex items-center gap-2 float-depth-sm">
+      <span class="text-xl md:text-2xl font-black font-outfit tracking-wider bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent glow-text-indigo">
+        DEVSCOPE AI
+      </span>
+    </div>
+    <nav class="hidden md:flex items-center gap-6 text-[10px] font-bold uppercase tracking-wider text-gray-400 float-depth-sm">
+      <button onclick="switchTab('landing')" id="nav-landing" class="text-indigo-400 hover:text-indigo-300 transition-colors">Home</button>
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="hover:text-indigo-400 transition-colors">Dashboard</button>
+      <button onclick="switchTab('resume')" id="nav-resume" class="hover:text-indigo-400 transition-colors">Resume</button>
+      <button onclick="switchTab('github')" id="nav-github" class="hover:text-indigo-400 transition-colors">GitHub</button>
+      <button onclick="switchTab('jobmatch')" id="nav-jobmatch" class="hover:text-indigo-400 transition-colors">Job Match</button>
+      <button onclick="switchTab('careertwin')" id="nav-careertwin" class="hover:text-indigo-400 transition-colors">Career Twin</button>
+      <button onclick="switchTab('interview')" id="nav-interview" class="hover:text-indigo-400 transition-colors">Interview</button>
+      <button onclick="switchTab('recruiter')" id="nav-recruiter" class="hover:text-indigo-400 transition-colors font-semibold">Recruiter Hub</button>
+    </nav>
+    <div class="flex items-center gap-4 float-depth-sm">
+      <span id="user-display" class="text-xs font-medium text-indigo-300"></span>
+      <button onclick="handleLogout()" class="px-3 py-1 rounded bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-[10px] font-bold text-red-400 uppercase tracking-widest transition-all">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- Main view grid -->
+  <main class="flex-1 w-full max-w-6xl mx-auto px-4 md:px-8 py-10 flex flex-col justify-center">
+
+    <!-- 0A. DUAL-MODE LOGIN PORTAL -->
+    <section id="view-login" class="flex flex-col items-center justify-center py-12">
+      <div class="glass-card-3d rounded-3xl p-8 max-w-md w-full text-center flex flex-col gap-6 tilt-card">
+        
+        <!-- Toggle Tabs -->
+        <div class="flex border-b border-white/5 pb-2 float-depth-sm">
+          <button onclick="toggleAuthTab('signin')" id="tab-signin" class="flex-1 pb-2 text-sm font-bold text-indigo-400 border-b-2 border-indigo-500 transition-all">
+            Sign In
+          </button>
+          <button onclick="toggleAuthTab('signup')" id="tab-signup" class="flex-1 pb-2 text-sm font-semibold text-gray-500 border-b-2 border-transparent transition-all">
+            Sign Up
+          </button>
+        </div>
+
+        <!-- Forms Container -->
+        <div class="flex flex-col gap-4 float-depth-md">
+          
+          <!-- 1. SIGN IN FORM -->
+          <div id="form-signin" class="flex flex-col gap-3">
+            <input type="email" id="signin-email" placeholder="Email Address" class="bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+            <input type="password" id="signin-password" placeholder="Password" class="bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+            <button onclick="handleEmailSignIn()" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all" id="btn-signin">
+              Sign In
+            </button>
+          </div>
+
+          <!-- 2. SIGN UP FORM -->
+          <div id="form-signup" class="hidden flex flex-col gap-3">
+            <input type="text" id="signup-name" placeholder="Full Name" class="bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+            <input type="email" id="signup-email" placeholder="Email Address" class="bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+            <input type="password" id="signup-password" placeholder="Password" class="bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+            <button onclick="handleEmailSignUp()" class="py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all" id="btn-signup">
+              Create Account
+            </button>
+          </div>
+
+          <!-- Divider -->
+          <div class="flex items-center my-2">
+            <div class="flex-grow border-t border-white/5"></div>
+            <span class="mx-3 text-[10px] text-gray-500 uppercase tracking-widest">OR</span>
+            <div class="flex-grow border-t border-white/5"></div>
+          </div>
+
+          <!-- Google SSO -->
+          <button onclick="openGoogleModal()" class="flex items-center justify-center gap-3 py-3 bg-white text-gray-900 font-bold text-xs rounded-xl shadow-lg hover:bg-gray-100 transition-all">
+            <svg class="w-4 h-4" viewBox="0 0 24 24">
+              <path fill="#EA4335" d="M12 5.04c1.9 0 3.5.7 4.8 1.9l3.6-3.6C18.2 1.4 15.3 0 12 0 7.3 0 3.3 2.7 1.4 6.6l4.2 3.2C6.6 6.9 9.1 5.04 12 5.04z"/>
+              <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.4h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
+              <path fill="#FBBC05" d="M5.6 14.2c-.3-.8-.4-1.7-.4-2.7s.1-1.9.4-2.7L1.4 5.6C.5 7.5 0 9.7 0 12s.5 4.5 1.4 6.4l4.2-3.2z"/>
+              <path fill="#34A853" d="M12 24c3.2 0 6-.9 8-2.6l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-2.9 0-5.4-1.9-6.4-4.7L1.4 18.2C3.3 21.3 7.3 24 12 24z"/>
+            </svg>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 0B. LANDING VIEW -->
+    <section id="view-landing" class="hidden flex flex-col md:flex-row items-center justify-between gap-12 w-full py-8">
+      <div class="flex flex-col items-start gap-6 max-w-xl text-left">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-[10px] font-bold uppercase tracking-wider text-indigo-300">
+          ✨ Premium Developer Intelligence Platform
+        </div>
+        <h1 class="text-4xl md:text-5xl font-black font-outfit tracking-tight leading-tight">
+          Know Your <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Developer Potential</span>
+        </h1>
+        <p class="text-gray-400 text-sm md:text-base font-light leading-relaxed">
+          AI-powered career intelligence for modern engineers. Scans code quality, benchmarks salary with machine learning, and simulates recruiter decisions.
+        </p>
+        <div class="flex gap-4 mt-2">
+          <button onclick="switchTab('dashboard')" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 transition-all">
+            Launch Dashboard
+          </button>
+          <a href="https://github.com" target="_blank" class="px-6 py-3 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 text-gray-300 text-xs font-bold transition-all">
+            Star Repo
+          </a>
+        </div>
+      </div>
+      <div id="hero-3d-container" class="w-full md:w-[480px] h-[350px] md:h-[420px] relative glass-card-3d rounded-3xl overflow-hidden tilt-card"></div>
+    </section>
+
+    <!-- 1. DASHBOARD VIEW -->
+    <section id="view-dashboard" class="hidden flex flex-col gap-10">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Developer Intelligence Dashboard</h1>
+          <p class="text-gray-400 text-sm font-light mt-1.5">Compute global scores, hiring predictions, and target salary models.</p>
+        </div>
+        <div class="flex gap-4">
+          <button onclick="switchTab('resume')" class="px-5 py-2.5 text-xs font-bold rounded-xl border border-white/10 hover:border-white/20 bg-white/5 transition-all text-gray-300 shadow-md">
+            Scan Resume
+          </button>
+          <button onclick="switchTab('github')" class="px-5 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg shadow-indigo-600/30">
+            Scan GitHub
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- 3D Orb -->
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col items-center justify-center h-[340px] tilt-card md:col-span-1">
+          <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-4 float-depth-sm">Holographic Score Orb</span>
+          <div id="dashboard-3d-score-container" class="w-full h-[220px] float-depth-md"></div>
+        </div>
+        <!-- Stats Grid -->
+        <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[156px] tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">Overall Score</span>
+            <span class="text-4xl font-black text-indigo-400 font-outfit glow-text-indigo float-depth-md" id="dash-score">--<span class="text-sm text-gray-500 font-normal">/100</span></span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[156px] tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">Hiring Probability</span>
+            <span class="text-4xl font-black text-green-400 font-outfit glow-text-green float-depth-md" id="dash-prob">--%</span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[156px] tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">Salary Benchmark</span>
+            <span class="text-4xl font-black text-purple-400 font-outfit float-depth-md" id="dash-salary">--<span class="text-sm text-gray-500 font-normal">/yr</span></span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[156px] tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">AI Verdict</span>
+            <span class="text-3xl font-black text-pink-400 font-outfit float-depth-md" id="dash-verdict">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Committee Reviews -->
+      <div class="flex flex-col gap-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold font-outfit text-gray-300">Hiring Committee Reviews</h2>
+          <div id="committee-consensus-badge" class="text-xs px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold hidden"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="dashboard-committee-grid">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-blue-400">Technical Recruiter</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "No resume scanned yet. Please upload your resume PDF inside the Resume tab."
+            </p>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-green-400">Engineering Manager</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "No GitHub repository scanned yet. Please run your portfolio scout inside the GitHub tab."
+            </p>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Startup CTO</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "Awaiting developer portfolio data scan to process system architecture scores."
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roadmap & Gaps -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+          <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3 float-depth-sm">Skill Gap Matrix</h3>
+          <div class="flex flex-col gap-4 float-depth-md">
+            <div>
+              <span class="text-[10px] font-bold text-green-400 uppercase tracking-widest block mb-2">Verified Competencies</span>
+              <ul class="list-disc list-inside text-gray-300 text-sm font-light flex flex-col gap-2" id="dash-strengths">
+                <li>Pending scans.</li>
+              </ul>
+            </div>
+            <div class="mt-2">
+              <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest block mb-2">Missing Skills</span>
+              <ul class="list-disc list-inside text-gray-300 text-sm font-light flex flex-col gap-2" id="dash-weaknesses">
+                <li>Pending scans.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+          <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3 float-depth-sm">Actionable Roadmap</h3>
+          <div class="flex flex-col gap-4 float-depth-md">
+            <div>
+              <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest block mb-2">30-Day Growth Plan</span>
+              <ul class="list-decimal list-inside text-gray-300 text-sm font-light flex flex-col gap-2" id="dash-road-30">
+                <li>Scan profile parameters first to compute targets.</li>
+              </ul>
+            </div>
+            <div class="mt-2">
+              <span class="text-[10px] font-bold text-purple-400 uppercase tracking-widest block mb-2">90-Day Growth Plan</span>
+              <ul class="list-decimal list-inside text-gray-300 text-sm font-light flex flex-col gap-2" id="dash-road-90">
+                <li>Scan profile parameters first to compute targets.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. RESUME SCORER VIEW -->
+    <section id="view-resume" class="hidden flex flex-col gap-8">
+      <div>
+        <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">ATS Resume Intelligence</h1>
+        <p class="text-gray-400 text-sm font-light mt-1.5">Audit your resume matching ratios, credentials, and structural layouts.</p>
+      </div>
+
+      <div class="glass-card-3d rounded-2xl p-10 flex flex-col items-center gap-6 border-dashed border-2 border-white/10 hover:border-indigo-500/30 transition-all tilt-card">
+        <div class="flex flex-col items-center gap-3 text-center float-depth-sm">
+          <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <span class="text-sm font-bold text-gray-300">Upload PDF Resume</span>
+        </div>
+        <input type="file" id="resumeFileInput" class="hidden" onchange="resumeSelected()">
+        <button onclick="document.getElementById('resumeFileInput').click()" class="px-5 py-2.5 text-xs font-bold rounded-xl border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 transition-all float-depth-md" id="fileLabel">
+          Select File
+        </button>
+        <button onclick="runResumeScan()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 float-depth-md" id="btnResumeScan" style="display:none">
+          Start ATS Audit
+        </button>
+      </div>
+
+      <div id="resume-results" class="hidden flex flex-col gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-32 tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">ATS Match Ratio</span>
+            <span class="text-3xl font-black text-green-400 font-outfit glow-text-green float-depth-md" id="res-ats">82%</span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-32 tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">Resume Score</span>
+            <span class="text-3xl font-black text-indigo-400 font-outfit glow-text-indigo float-depth-md" id="res-quality">85/100</span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-32 tilt-card">
+            <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase float-depth-sm">Formatting Rating</span>
+            <span class="text-3xl font-black text-purple-400 font-outfit float-depth-md">Excellent</span>
+          </div>
+        </div>
+
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+          <div class="float-depth-md">
+            <span class="text-xs font-bold text-gray-400 tracking-widest uppercase block mb-3">Extracted Skills</span>
+            <div class="flex flex-wrap gap-2.5" id="res-extracted-skills"></div>
+          </div>
+          <div class="mt-4 float-depth-md">
+            <span class="text-xs font-bold text-gray-400 tracking-widest uppercase block mb-3">Missing Keywords</span>
+            <div class="flex flex-wrap gap-2.5" id="res-missing-skills"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GITHUB SCOUT VIEW -->
+    <section id="view-github" class="hidden flex flex-col gap-8">
+      <div>
+        <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">GitHub Scout Intelligence</h1>
+        <p class="text-gray-400 text-sm font-light mt-1.5">Perform deep codebase audits of documentation, security configurations, and coding practices.</p>
+      </div>
+
+      <div class="glass-card-3d rounded-2xl p-6 flex flex-col md:flex-row gap-4 items-center tilt-card">
+        <div class="flex-1 w-full float-depth-sm">
+          <label class="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">GitHub Username</label>
+          <input type="text" id="githubInput" placeholder="e.g. torvalds" class="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+        </div>
+        <button onclick="runGithubScan()" class="w-full md:w-auto px-6 py-3 mt-6 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 float-depth-md">
+          Analyze Portfolio
+        </button>
+      </div>
+
+      <div id="github-results" class="hidden flex flex-col gap-8">
+        <!-- 3D GitHub Universe Planets Canvas -->
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col items-center justify-center h-[340px] tilt-card">
+          <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-4 float-depth-sm">GitHub Repository Universe (3D Planets)</span>
+          <div id="github-3d-universe-container" class="w-full h-[220px] float-depth-md"></div>
+        </div>
+
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 tilt-card">
+          <div class="flex items-center gap-4 float-depth-sm">
+            <img src="" id="git-avatar" class="w-16 h-16 rounded-full border-2 border-indigo-500/30" />
+            <div>
+              <h3 class="text-xl font-bold font-outfit" id="git-username">username</h3>
+              <p class="text-gray-400 text-xs font-light mt-1" id="git-stats">Repos: 18 | Followers: 45</p>
+            </div>
+          </div>
+          <div class="text-right float-depth-sm">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-1">GitHub Score</span>
+            <span class="text-4xl font-black text-indigo-400 font-outfit glow-text-indigo" id="git-score">84</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <h4 class="text-lg font-bold font-outfit text-gray-300">Audit Repo Metrics</h4>
+          <div class="grid grid-cols-1 gap-6" id="git-repos-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. AI INTERVIEWER VIEW -->
+    <section id="view-interview" class="hidden flex flex-col gap-8 h-[600px]">
+      <div>
+        <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">AI Interview Simulator</h1>
+        <p class="text-gray-400 text-sm font-light mt-1.5">Interactive chat evaluation for system architectural, programming, and behavioral screening.</p>
+      </div>
+
+      <!-- Selection Config -->
+      <div id="interview-config" class="glass-card-3d rounded-2xl p-10 flex flex-col gap-8 items-center my-auto tilt-card">
+        <span class="text-sm font-bold text-gray-300 float-depth-sm">Choose Interview Focus</span>
+        <div class="flex gap-4 float-depth-md">
+          <button onclick="setInterviewTrack('Technical')" id="btn-track-tech" class="px-5 py-2.5 rounded-xl border border-indigo-500 bg-indigo-500/10 text-indigo-300 text-xs font-bold">Technical Focus</button>
+          <button onclick="setInterviewTrack('System Design')" id="btn-track-sys" class="px-5 py-2.5 rounded-xl border border-white/5 bg-white/5 text-gray-400 text-xs font-bold hover:text-gray-300">System Design Focus</button>
+        </div>
+        <button onclick="startInterviewSession()" class="w-full max-w-xs px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-600/30 float-depth-md">
+          Start Session
+        </button>
+      </div>
+
+      <!-- Chat Screen -->
+      <div id="interview-chat" class="hidden glass-card-3d rounded-2xl flex flex-col justify-between flex-1 overflow-hidden h-[450px]">
+        <div class="flex-1 p-6 overflow-y-auto flex flex-col gap-4 float-depth-sm" id="chat-messages"></div>
+
+        <form id="chat-form" onsubmit="submitInterviewResponse(event)" class="border-t border-white/5 p-4 flex gap-3 bg-black/20 float-depth-sm">
+          <input type="text" id="chatInput" placeholder="Type your reply here..." class="flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+          <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20">Send</button>
+        </form>
+
+        <div id="chat-finish-actions" class="hidden border-t border-white/5 p-6 text-center bg-green-500/5 float-depth-sm">
+          <button onclick="resetInterviewView()" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all">Start New Session</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. JOB DESCRIPTION MATCH GATE -->
+    <section id="view-jobmatch" class="hidden flex flex-col gap-8">
+      <div>
+        <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Job Description Match Engine</h1>
+        <p class="text-gray-400 text-sm font-light mt-1.5">Paste target job descriptions to analyze match scores, ATS keywords compatibility, and rejection risks.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Input JD Form -->
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 md:col-span-1 tilt-card">
+          <span class="text-[10px] font-bold text-gray-400 tracking-widest uppercase mb-1 float-depth-sm">Paste Job Details</span>
+          <textarea id="jd-input-text" placeholder="Paste entire Job Description or Career Page text here..." class="w-full h-[280px] bg-black/30 border border-white/10 rounded-xl p-4 text-xs focus:outline-none focus:border-indigo-500 text-white font-light resize-none float-depth-md"></textarea>
+          <button onclick="runJobMatchAnalysis()" class="py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all float-depth-md" id="btn-run-match">
+            Analyze JD Compatibility
+          </button>
+        </div>
+
+        <!-- Matching Scores & Diagnosis -->
+        <div id="match-results-panel" class="hidden md:col-span-2 flex flex-col gap-6">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="glass-card-3d rounded-2xl p-4 flex flex-col justify-between h-[110px] text-center">
+              <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Overall Match</span>
+              <span class="text-3xl font-black text-indigo-400 font-outfit glow-text-indigo" id="match-score-overall">--%</span>
+            </div>
+            <div class="glass-card-3d rounded-2xl p-4 flex flex-col justify-between h-[110px] text-center">
+              <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider">ATS Score</span>
+              <span class="text-3xl font-black text-green-400 font-outfit glow-text-green" id="match-score-ats">--%</span>
+            </div>
+            <div class="glass-card-3d rounded-2xl p-4 flex flex-col justify-between h-[110px] text-center">
+              <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Tech Match</span>
+              <span class="text-3xl font-black text-purple-400 font-outfit" id="match-score-tech">--%</span>
+            </div>
+            <div class="glass-card-3d rounded-2xl p-4 flex flex-col justify-between h-[110px] text-center">
+              <span class="text-[8px] font-bold text-gray-400 uppercase tracking-wider">Skill Gap</span>
+              <span class="text-3xl font-black text-red-400 font-outfit" id="match-score-gap">--%</span>
+            </div>
+          </div>
+
+          <!-- Why you don't get interviews warning diagnosis -->
+          <div class="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex flex-col gap-3">
+            <div class="flex items-center gap-2 text-red-400 font-bold font-outfit">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              AI Interview Rejection Diagnosis
+            </div>
+            <p class="text-gray-300 text-xs font-light">We detected critical gaps between your codebase footprint and the job description. Automated screening filters might flag these issues:</p>
+            <ul class="list-disc list-inside text-gray-300 text-xs flex flex-col gap-1.5 font-light" id="match-diagnosis-reasons"></ul>
+            <div class="border-t border-red-500/20 pt-3 mt-1 flex flex-col gap-1.5">
+              <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Recommended Actions</span>
+              <ul class="list-decimal list-inside text-gray-400 text-xs flex flex-col gap-1 font-light" id="match-diagnosis-actions"></ul>
+            </div>
+          </div>
+
+          <!-- Action Plan Roadmap -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="glass-card-3d rounded-2xl p-5 flex flex-col gap-3">
+              <span class="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Missing Tech Requirements</span>
+              <div class="flex flex-wrap gap-2" id="match-missing-skills"></div>
+            </div>
+            <div class="glass-card-3d rounded-2xl p-5 flex flex-col gap-3">
+              <span class="text-[9px] font-bold text-purple-400 uppercase tracking-widest">Personalized 30-Day Checklist</span>
+              <ul class="list-disc list-inside text-gray-300 text-xs flex flex-col gap-1 font-light" id="match-road-30"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. CAREER TWIN AI SIMULATOR -->
+    <section id="view-careertwin" class="hidden flex flex-col gap-8">
+      <div class="flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">AI Career Twin Simulator</h1>
+          <p class="text-gray-400 text-sm font-light mt-1.5">Simulate your professional twin transitioning into alternative tracks in real-time.</p>
+        </div>
+        <div class="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
+          <button onclick="setTwinTrack('Backend')" id="btn-twin-backend" class="px-4 py-2 bg-indigo-600 text-white text-[10px] font-bold uppercase rounded-lg transition-all">Backend</button>
+          <button onclick="setTwinTrack('AI')" id="btn-twin-ai" class="px-4 py-2 text-gray-400 hover:text-gray-300 text-[10px] font-bold uppercase rounded-lg transition-all">AI Engine</button>
+          <button onclick="setTwinTrack('DevOps')" id="btn-twin-devops" class="px-4 py-2 text-gray-400 hover:text-gray-300 text-[10px] font-bold uppercase rounded-lg transition-all">DevOps</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Simulated Twin Stats -->
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-6 md:col-span-1 tilt-card">
+          <div class="text-center flex flex-col gap-1 border-b border-white/5 pb-4 float-depth-sm">
+            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Simulated Career Goal</span>
+            <h3 class="text-xl font-bold font-outfit text-indigo-400" id="twin-title">Backend Engineer</h3>
+          </div>
+          <div class="flex flex-col gap-4 float-depth-md">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-400 font-light">Transition Time</span>
+              <span class="font-bold text-gray-200" id="twin-time">-- weeks</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-gray-400 font-light">Probability of Success</span>
+              <span class="font-bold text-green-400 text-sm" id="twin-success">--%</span>
+            </div>
+            <div class="border-t border-white/5 pt-4">
+              <span class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Required Certs</span>
+              <div id="twin-certs" class="flex flex-col gap-1.5 text-xs text-gray-300 font-light"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actionable items -->
+        <div class="md:col-span-2 flex flex-col gap-6">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+            <h4 class="text-base font-bold font-outfit text-gray-300">Target Skills Analysis</h4>
+            <div class="grid grid-cols-2 gap-6 mt-2">
+              <div>
+                <span class="text-[10px] font-bold text-green-400 uppercase tracking-widest block mb-2">Matching Competencies</span>
+                <div id="twin-matched-skills" class="flex flex-wrap gap-1.5"></div>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest block mb-2">Acquire Missing Stack</span>
+                <div id="twin-missing-skills" class="flex flex-wrap gap-1.5"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-3">
+            <h4 class="text-base font-bold font-outfit text-gray-300">Recommended Transition Portfolio Projects</h4>
+            <div id="twin-projects" class="flex flex-col gap-3 mt-2 text-xs font-light text-gray-300"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. RECRUITER COMPARISON HUB -->
+    <section id="view-recruiter" class="hidden flex flex-col gap-8">
+      <div>
+        <h1 class="text-3xl font-extrabold font-outfit tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Recruiter Candidate Workspace</h1>
+        <p class="text-gray-400 text-sm font-light mt-1.5">Bulk search profiles, evaluate candidate score percentiles, and compare engineering capabilities side-by-side.</p>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <!-- Filtering Workspace -->
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+          <input type="text" id="recruiter-search" oninput="filterRecruiterCandidates()" placeholder="Search candidates by name or skill..." class="w-full md:max-w-md bg-black/30 border border-white/10 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-white" />
+          <div class="flex gap-3 text-xs">
+            <button onclick="sortCandidates('overall')" class="px-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 rounded-xl transition-all">Rank by Score</button>
+            <button onclick="sortCandidates('probability')" class="px-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 rounded-xl transition-all">Rank by Hiring Prob</button>
+            <button onclick="toggleRecruiterHeatmap()" class="px-4 py-2 bg-red-600/10 border border-red-500/30 hover:bg-red-600/20 text-red-400 rounded-xl transition-all font-bold">Toggle Attention Heatmap</button>
+          </div>
+        </div>
+
+        <!-- Candidate list grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="recruiter-candidates-grid"></div>
+      </div>
+    </section>
+
+    <!-- 8. PUBLIC PORTFOLIO VIEW (Read-only mode) -->
+    <section id="view-public-profile" class="hidden flex flex-col gap-8">
+      <!-- Public header -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-6 gap-4">
+        <div class="flex items-center gap-4">
+          <img id="pub-avatar" class="w-16 h-16 rounded-full border border-indigo-500/20" src="" />
+          <div>
+            <h1 id="pub-fullname" class="text-2xl font-black font-outfit tracking-tight">--</h1>
+            <p id="pub-role" class="text-indigo-400 text-sm font-semibold"></p>
+            <div id="pub-stats" class="text-[10px] text-gray-400 font-light mt-1 uppercase tracking-wider"></div>
+          </div>
+        </div>
+        <div class="flex gap-3 text-xs">
+          <!-- Mode Toggles -->
+          <div class="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
+            <button onclick="togglePublicMode('recruiter')" id="btn-pub-rec" class="px-4 py-2 bg-indigo-600 text-white text-[9px] font-bold uppercase rounded-lg transition-all">Recruiter View</button>
+            <button onclick="togglePublicMode('candidate')" id="btn-pub-cand" class="px-4 py-2 text-gray-400 hover:text-gray-300 text-[9px] font-bold uppercase rounded-lg transition-all">Developer View</button>
+          </div>
+          <button onclick="window.print()" class="px-5 py-2 bg-white text-gray-900 font-bold rounded-xl shadow-lg hover:bg-gray-100 transition-all">Export PDF Report</button>
+        </div>
+      </div>
+
+      <!-- Recruiter View of Public Profile -->
+      <div id="pub-recruiter-section" class="flex flex-col gap-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[150px] text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Global Score Ranking</span>
+            <span class="text-4xl font-black text-indigo-400 font-outfit glow-text-indigo" id="pub-rec-score">--</span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[150px] text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Hiring Committee Vote</span>
+            <span class="text-3xl font-black text-green-400 font-outfit glow-text-green" id="pub-rec-verdict">--</span>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col justify-between h-[150px] text-center">
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Salary Benchmark Range</span>
+            <span class="text-3xl font-black text-purple-400 font-outfit" id="pub-rec-salary">--</span>
+          </div>
+        </div>
+
+        <!-- Hiring Committee roundtable reviews -->
+        <div class="flex flex-col gap-6">
+          <h2 class="text-xl font-bold font-outfit text-gray-300">Roundtable hiring committee reviews</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="pub-rec-committee-grid"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <!-- Top projects with maturity levels -->
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+            <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3">Engineering Maturity assessment</h3>
+            <div id="pub-rec-projects-list" class="flex flex-col gap-4"></div>
+          </div>
+          <!-- Strengths / Rejection Warnings -->
+          <div class="flex flex-col gap-6">
+            <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+              <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3">Recruiter Attention Heatmap prediction</h3>
+              <div class="flex justify-between items-center text-xs">
+                <span class="text-gray-400 font-light">Average recruiter viewing time</span>
+                <span class="font-bold text-indigo-400 text-sm">6.2 seconds attention-span</span>
+              </div>
+              <p class="text-gray-400 text-xs font-light mt-1">Recruiters focus primarily on GitHub commit metrics (42%), followed by container configuration setups (28%), and ATS score alignments (20%).</p>
+            </div>
+            <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+              <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3 text-red-400">AI Rejection Warning Diagnosis</h3>
+              <ul id="pub-rec-rejection-list" class="list-disc list-inside text-gray-300 text-xs flex flex-col gap-2 font-light"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Developer View of Public Profile -->
+      <div id="pub-candidate-section" class="hidden flex flex-col gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+            <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3 text-indigo-400">30-60-90 Day Career Action Roadmap</h3>
+            <div class="flex flex-col gap-4">
+              <div>
+                <span class="text-[9px] font-bold text-green-400 uppercase tracking-widest block mb-1">30-Day Growth Plan</span>
+                <ul id="pub-cand-road-30" class="list-decimal list-inside text-gray-300 text-xs flex flex-col gap-1 font-light"></ul>
+              </div>
+              <div class="mt-2">
+                <span class="text-[9px] font-bold text-purple-400 uppercase tracking-widest block mb-1">90-Day Growth Plan</span>
+                <ul id="pub-cand-road-90" class="list-decimal list-inside text-gray-300 text-xs flex flex-col gap-1 font-light"></ul>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Career twin track -->
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4">
+            <h3 class="text-lg font-bold font-outfit border-b border-white/5 pb-3">AI Career Twin Simulations</h3>
+            <div class="flex flex-col gap-4" id="pub-cand-twins"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 3D ARCHITECT CODE REVIEW MODAL -->
+  <div id="code-review-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden animate-fade-in">
+    <div class="bg-gray-900 border border-white/10 text-gray-200 w-full max-w-2xl rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6 relative mx-4 max-h-[85vh] overflow-y-auto">
+      <div class="flex justify-between items-start border-b border-white/5 pb-4">
+        <div>
+          <h2 class="text-xl font-bold font-outfit text-indigo-400" id="review-modal-title"> distributed-task-runner</h2>
+          <p class="text-xs text-gray-400 font-light mt-1">Reviewed by Elena Rostova (Senior Software Architect)</p>
+        </div>
+        <button onclick="closeCodeReviewModal()" class="text-gray-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <!-- Rating metrics -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white/5 rounded-2xl p-4 text-center">
+        <div>
+          <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Architecture</span>
+          <span class="font-bold text-indigo-300 text-sm" id="review-score-arch">--/100</span>
+        </div>
+        <div>
+          <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Scalability</span>
+          <span class="font-bold text-purple-300 text-sm" id="review-score-scale">--/100</span>
+        </div>
+        <div>
+          <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Security</span>
+          <span class="font-bold text-red-300 text-sm" id="review-score-sec">--/100</span>
+        </div>
+        <div>
+          <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">CI/CD & Ops</span>
+          <span class="font-bold text-green-300 text-sm" id="review-score-ops">--/100</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4 text-xs font-light text-gray-300 leading-relaxed">
+        <div>
+          <h4 class="font-bold text-gray-200 font-outfit mb-1">Architectural Review</h4>
+          <p id="review-text-arch"></p>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-200 font-outfit mb-1">Scalability & Database Bottlenecks</h4>
+          <p id="review-text-scale"></p>
+        </div>
+        <div>
+          <h4 class="font-bold text-gray-200 font-outfit mb-1">Security Vulnerability Assessment</h4>
+          <p id="review-text-sec"></p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2 border-t border-white/5 pt-4">
+          <div>
+            <h4 class="font-bold text-indigo-400 font-outfit mb-2">Priority Refactorings</h4>
+            <ul class="list-disc list-inside flex flex-col gap-1 font-light text-gray-400" id="review-refactoring-list"></ul>
+          </div>
+          <div>
+            <h4 class="font-bold text-purple-400 font-outfit mb-1">Technical Debt Analysis</h4>
+            <p id="review-debt-text"></p>
+            <h4 class="font-bold text-green-400 font-outfit mb-1 mt-3">Production Readiness</h4>
+            <p id="review-readiness-text"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-2">
+        <button onclick="closeCodeReviewModal()" class="px-6 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition-all">Close Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECRUITER ATTENTION HEATMAP OVERLAY CANVAS -->
+  <canvas id="recruiter-heatmap-canvas" class="fixed inset-0 pointer-events-none z-40 hidden w-full h-full"></canvas>
+
+  <!-- Google Auth Mock Modal -->
+  <div id="google-auth-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md hidden animate-fade-in">
+    <div class="bg-white text-gray-900 w-full max-w-sm rounded-3xl p-8 shadow-2xl flex flex-col gap-6 relative border border-gray-100 mx-4">
+      <!-- Google Logo -->
+      <div class="flex flex-col items-center gap-2">
+        <svg class="w-10 h-10" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.85z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.85c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        <h2 class="text-xl font-bold text-gray-800 font-outfit mt-2">Sign in</h2>
+        <p class="text-xs text-gray-500">with your Google Account</p>
+      </div>
+
+      <!-- Email Input Form -->
+      <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label for="google-custom-email" class="text-xs font-semibold text-gray-700">Email or phone</label>
+          <input type="email" id="google-custom-email" placeholder="name@gmail.com" class="w-full px-4 py-3 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-gray-50 transition-all" />
+        </div>
+        
+        <button onclick="submitCustomGoogleAccount()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all">
+          Next
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex justify-between items-center text-[10px] text-gray-400 mt-2">
+        <button onclick="closeGoogleModal()" class="hover:text-gray-600 font-semibold">Cancel</button>
+        <span>Secure Auth by Google</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-white/5 py-6 text-center text-xs text-gray-600">
+    © 2026 DevScope AI. Engineered for senior recruiters.
+  </footer>
+
+  <!-- WebGL, 3D Tilt Card and State Scripts -->
+  <script>
+    const API_URL = "http://127.0.0.1:8000/api/v1";
+    let isOnline = false;
+    let selectedTrack = "Technical";
+    let activeInterviewId = "";
+
+    // 3D Tilt Card effect
+    function init3dTilt() {
+      document.querySelectorAll('.tilt-card').forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const xc = rect.width / 2;
+          const yc = rect.height / 2;
+          
+          const angleX = (yc - y) / 12;
+          const angleY = (x - xc) / 12;
+          
+          card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-5px)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)`;
+        });
+      });
+    }
+
+    // Auth Form Tab Toggles
+    function toggleAuthTab(tab) {
+      const formSignin = document.getElementById("form-signin");
+      const formSignup = document.getElementById("form-signup");
+      const tabSignin = document.getElementById("tab-signin");
+      const tabSignup = document.getElementById("tab-signup");
+
+      if (tab === "signin") {
+        formSignin.classList.remove("hidden");
+        formSignup.classList.add("hidden");
+        tabSignin.className = "flex-1 pb-2 text-sm font-bold text-indigo-400 border-b-2 border-indigo-500 transition-all";
+        tabSignup.className = "flex-1 pb-2 text-sm font-semibold text-gray-500 border-b-2 border-transparent transition-all";
+      } else {
+        formSignin.classList.add("hidden");
+        formSignup.classList.remove("hidden");
+        tabSignin.className = "flex-1 pb-2 text-sm font-semibold text-gray-500 border-b-2 border-transparent transition-all";
+        tabSignup.className = "flex-1 pb-2 text-sm font-bold text-indigo-400 border-b-2 border-indigo-500 transition-all";
+      }
+    }
+
+    // --- WebGL 3D Globe Render (Landing Page) ---
+    // --- WebGL 3D Globe Render (Landing Page) ---
+    let globeScene, globeCamera, globeRenderer, globeMesh, globeParticles, globeInitialized = false;
+    
+    function initHero3dGlobe() {
+      const container = document.getElementById('hero-3d-container');
+      if (!container) return;
+      
+      if (globeInitialized) {
+        setTimeout(onWindowResize, 10);
+        return;
+      }
+      
+      const width = container.clientWidth || 400;
+      const height = container.clientHeight || 400;
+      
+      globeScene = new THREE.Scene();
+      globeCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      globeCamera.position.z = 5.5;
+      
+      globeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      globeRenderer.setSize(width, height);
+      globeRenderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(globeRenderer.domElement);
+      
+      const geometry = new THREE.SphereGeometry(2, 40, 40);
+      const material = new THREE.MeshPhysicalMaterial({
+        color: 0x6366f1,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.25,
+        roughness: 0.2,
+        metalness: 0.9
+      });
+      globeMesh = new THREE.Mesh(geometry, material);
+      globeScene.add(globeMesh);
+      
+      const particleGeo = new THREE.BufferGeometry();
+      const count = 300;
+      const positions = new Float32Array(count * 3);
+      for(let i=0; i<count; i++) {
+        const u = Math.random();
+        const v = Math.random();
+        const theta = u * 2 * Math.PI;
+        const phi = Math.acos(2 * v - 1);
+        const r = 2.15 + Math.random() * 0.45;
+        positions[i*3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i*3+2] = r * Math.cos(phi);
+      }
+      particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const particleMat = new THREE.PointsMaterial({
+        color: 0x06b6d4,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+      });
+      globeParticles = new THREE.Points(particleGeo, particleMat);
+      globeScene.add(globeParticles);
+      
+      const nodeGeo = new THREE.SphereGeometry(0.12, 16, 16);
+      const nodeMat1 = new THREE.MeshBasicMaterial({ color: 0xd946ef });
+      const nodeMat2 = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+      const node1 = new THREE.Mesh(nodeGeo, nodeMat1);
+      node1.position.set(1.4, 1.2, 1.1);
+      const node2 = new THREE.Mesh(nodeGeo, nodeMat2);
+      node2.position.set(-1.5, -0.7, 1.2);
+      globeMesh.add(node1);
+      globeMesh.add(node2);
+      
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.15);
+      globeScene.add(ambientLight);
+      const pointLight1 = new THREE.PointLight(0x6366f1, 2, 50);
+      pointLight1.position.set(5, 5, 5);
+      globeScene.add(pointLight1);
+      const pointLight2 = new THREE.PointLight(0xd946ef, 1.5, 50);
+      pointLight2.position.set(-5, -5, -5);
+      globeScene.add(pointLight2);
+      
+      let mouseX = 0, mouseY = 0;
+      container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const w = container.clientWidth || 400;
+        const h = container.clientHeight || 400;
+        mouseX = ((e.clientX - rect.left) / w) * 2 - 1;
+        mouseY = -((e.clientY - rect.top) / h) * 2 + 1;
+      });
+      
+      function animateGlobe() {
+        requestAnimationFrame(animateGlobe);
+        
+        const landingView = document.getElementById('view-landing');
+        if (!landingView || landingView.offsetParent === null) return;
+        
+        const elapsed = Date.now() * 0.0005;
+        
+        globeMesh.rotation.y = elapsed * 0.25;
+        globeParticles.rotation.y = -elapsed * 0.12;
+        globeMesh.rotation.x = mouseY * 0.4;
+        globeMesh.rotation.z = mouseX * 0.4;
+        
+        globeRenderer.render(globeScene, globeCamera);
+      }
+      
+      animateGlobe();
+      globeInitialized = true;
+    }
+
+    // --- WebGL 3D Score Orb (Dashboard View) ---
+    let orbScene, orbCamera, orbRenderer, orbMesh, orbRing1, orbRing2, orbInitialized = false;
+    
+    function initDashboardScoreOrb() {
+      const container = document.getElementById('dashboard-3d-score-container');
+      if (!container) return;
+      
+      if (orbInitialized) {
+        setTimeout(onWindowResize, 10);
+        return;
+      }
+      
+      const width = container.clientWidth || 400;
+      const height = container.clientHeight || 400;
+      
+      orbScene = new THREE.Scene();
+      orbCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      orbCamera.position.z = 4.2;
+      
+      orbRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      orbRenderer.setSize(width, height);
+      orbRenderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(orbRenderer.domElement);
+      
+      const geometry = new THREE.IcosahedronGeometry(1.2, 2);
+      const material = new THREE.MeshPhysicalMaterial({
+        color: 0xd946ef,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.2,
+        metalness: 0.85
+      });
+      orbMesh = new THREE.Mesh(geometry, material);
+      orbScene.add(orbMesh);
+      
+      const innerLight = new THREE.PointLight(0xd946ef, 3, 20);
+      orbMesh.add(innerLight);
+      
+      const ringGeo1 = new THREE.RingGeometry(1.6, 1.63, 64);
+      const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x6366f1, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+      orbRing1 = new THREE.Mesh(ringGeo1, ringMat1);
+      orbScene.add(orbRing1);
+      
+      const ringGeo2 = new THREE.RingGeometry(1.9, 1.93, 64);
+      const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x06b6d4, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+      orbRing2 = new THREE.Mesh(ringGeo2, ringMat2);
+      orbScene.add(orbRing2);
+      
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+      orbScene.add(ambientLight);
+      
+      function animateOrb() {
+        requestAnimationFrame(animateOrb);
+        
+        const dashboardView = document.getElementById('view-dashboard');
+        if (!dashboardView || dashboardView.offsetParent === null) return;
+        
+        const time = Date.now() * 0.0005;
+        
+        orbMesh.position.y = Math.sin(time * 2) * 0.08;
+        orbMesh.rotation.y = time * 0.3;
+        
+        orbRing1.rotation.x = time * 0.5;
+        orbRing1.rotation.y = time * 0.15;
+        
+        orbRing2.rotation.y = -time * 0.6;
+        orbRing2.rotation.z = time * 0.25;
+        
+        orbRenderer.render(orbScene, orbCamera);
+      }
+      
+      animateOrb();
+      orbInitialized = true;
+    }
+
+    // --- WebGL GitHub Planets Solar-System ---
+    let gitScene, gitCamera, gitRenderer, centralStar, planets = [], gitObjects = [], gitInitialized = false;
+    
+    function initGithub3dUniverse(repositories) {
+      const container = document.getElementById('github-3d-universe-container');
+      if (!container) return;
+      
+      // If already initialized, update planets and trigger resize
+      if (gitInitialized) {
+        // Clear previous planets and orbits
+        gitObjects.forEach(obj => gitScene.remove(obj));
+        gitObjects = [];
+        planets = [];
+        
+        if (repositories && repositories.length > 0) {
+          const colors = [0xd946ef, 0x06b6d4, 0x10b981, 0xf59e0b];
+          repositories.forEach((repo, idx) => {
+            const orbitRadius = 1.8 + idx * 1.1;
+            const planetRadius = 0.15 + (repo.stargazers_count * 0.015);
+            
+            const planetGeo = new THREE.SphereGeometry(planetRadius, 16, 16);
+            const planetMat = new THREE.MeshStandardMaterial({
+              color: colors[idx % colors.length],
+              roughness: 0.3,
+              metalness: 0.7
+            });
+            const planet = new THREE.Mesh(planetGeo, planetMat);
+            
+            const ringGeo = new THREE.RingGeometry(orbitRadius, orbitRadius + 0.02, 64);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.08 });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            
+            gitScene.add(ring);
+            gitScene.add(planet);
+            gitObjects.push(ring);
+            gitObjects.push(planet);
+            
+            planets.push({
+              mesh: planet,
+              radius: orbitRadius,
+              speed: 0.3 + (1 / orbitRadius),
+              angle: Math.random() * Math.PI * 2
+            });
+          });
+        }
+        
+        setTimeout(onWindowResize, 10);
+        return;
+      }
+      
+      const width = container.clientWidth || 400;
+      const height = container.clientHeight || 400;
+      
+      gitScene = new THREE.Scene();
+      gitCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      gitCamera.position.set(0, 5, 8);
+      gitCamera.lookAt(0, 0, 0);
+      
+      gitRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      gitRenderer.setSize(width, height);
+      gitRenderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(gitRenderer.domElement);
+      
+      const starGeo = new THREE.SphereGeometry(0.8, 32, 32);
+      const starMat = new THREE.MeshBasicMaterial({ color: 0x6366f1 });
+      centralStar = new THREE.Mesh(starGeo, starMat);
+      gitScene.add(centralStar);
+      
+      const starLight = new THREE.PointLight(0x6366f1, 3, 50);
+      gitScene.add(starLight);
+      
+      planets = [];
+      gitObjects = [];
+      const colors = [0xd946ef, 0x06b6d4, 0x10b981, 0xf59e0b];
+      
+      if (repositories && repositories.length > 0) {
+        repositories.forEach((repo, idx) => {
+          const orbitRadius = 1.8 + idx * 1.1;
+          const planetRadius = 0.15 + (repo.stargazers_count * 0.015);
+          
+          const planetGeo = new THREE.SphereGeometry(planetRadius, 16, 16);
+          const planetMat = new THREE.MeshStandardMaterial({
+            color: colors[idx % colors.length],
+            roughness: 0.3,
+            metalness: 0.7
+          });
+          const planet = new THREE.Mesh(planetGeo, planetMat);
+          
+          const ringGeo = new THREE.RingGeometry(orbitRadius, orbitRadius + 0.02, 64);
+          const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.08 });
+          const ring = new THREE.Mesh(ringGeo, ringMat);
+          ring.rotation.x = Math.PI / 2;
+          
+          gitScene.add(ring);
+          gitScene.add(planet);
+          gitObjects.push(ring);
+          gitObjects.push(planet);
+          
+          planets.push({
+            mesh: planet,
+            radius: orbitRadius,
+            speed: 0.3 + (1 / orbitRadius),
+            angle: Math.random() * Math.PI * 2
+          });
+        });
+      }
+      
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
+      gitScene.add(ambientLight);
+      
+      function animateGit() {
+        requestAnimationFrame(animateGit);
+        
+        const githubView = document.getElementById('view-github');
+        if (!githubView || githubView.offsetParent === null) return;
+        
+        const time = Date.now() * 0.001;
+        centralStar.rotation.y = time * 0.2;
+        
+        planets.forEach(p => {
+          p.angle += p.speed * 0.02;
+          p.mesh.position.x = Math.cos(p.angle) * p.radius;
+          p.mesh.position.z = Math.sin(p.angle) * p.radius;
+          p.mesh.rotation.y = time * 0.5;
+        });
+        
+        gitRenderer.render(gitScene, gitCamera);
+      }
+      
+      animateGit();
+      gitInitialized = true;
+    }
+
+    // WebGL size updater
+    function onWindowResize() {
+      // 1. Globe
+      const containerGlobe = document.getElementById('hero-3d-container');
+      if (containerGlobe && globeRenderer && globeCamera) {
+        const w = containerGlobe.clientWidth;
+        const h = containerGlobe.clientHeight;
+        globeCamera.aspect = w / h;
+        globeCamera.updateProjectionMatrix();
+        globeRenderer.setSize(w, h);
+      }
+      // 2. Dashboard Orb
+      const containerOrb = document.getElementById('dashboard-3d-score-container');
+      if (containerOrb && orbRenderer && orbCamera) {
+        const w = containerOrb.clientWidth;
+        const h = containerOrb.clientHeight;
+        orbCamera.aspect = w / h;
+        orbCamera.updateProjectionMatrix();
+        orbRenderer.setSize(w, h);
+      }
+      // 3. GitHub Universe
+      const containerGit = document.getElementById('github-3d-universe-container');
+      if (containerGit && gitRenderer && gitCamera) {
+        const w = containerGit.clientWidth;
+        const h = containerGit.clientHeight;
+        gitCamera.aspect = w / h;
+        gitCamera.updateProjectionMatrix();
+        gitRenderer.setSize(w, h);
+      }
+    }
+    window.addEventListener('resize', onWindowResize);
+
+    // --- Dynamic Auth Procedures ---
+
+    // 1. Email Sign In
+    async function handleEmailSignIn() {
+      const email = document.getElementById("signin-email").value.trim();
+      const password = document.getElementById("signin-password").value.trim();
+      if (!email || !password) {
+        alert("Please enter both email and password.");
+        return;
+      }
+      
+      const btn = document.getElementById("btn-signin");
+      btn.innerText = "Authenticating...";
+      btn.disabled = true;
+
+      try {
+        const response = await fetch(`${API_URL}/auth/token`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("token", data.access_token);
+          localStorage.setItem("email", email);
+          checkAuthenticationState();
+        } else {
+          alert("Authentication failed. Invalid email or password.");
+        }
+      } catch (err) {
+        alert("Unable to contact backend server.");
+      } finally {
+        btn.innerText = "Sign In";
+        btn.disabled = false;
+      }
+    }
+
+    // 2. Email Sign Up
+    async function handleEmailSignUp() {
+      const name = document.getElementById("signup-name").value.trim();
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value.trim();
+      if (!name || !email || !password) {
+        alert("Please fill out all fields.");
+        return;
+      }
+
+      const btn = document.getElementById("btn-signup");
+      btn.innerText = "Provisioning...";
+      btn.disabled = true;
+
+      try {
+        const signupResp = await fetch(`${API_URL}/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, full_name: name })
+        });
+
+        if (signupResp.ok) {
+          // Auto log in after registration
+          const tokenResp = await fetch(`${API_URL}/auth/token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`
+          });
+          if (tokenResp.ok) {
+            const data = await tokenResp.json();
+            localStorage.setItem("token", data.access_token);
+            localStorage.setItem("email", email);
+            checkAuthenticationState();
+          }
+        } else {
+          const errData = await signupResp.json();
+          alert(errData.detail || "Account registration failed.");
+        }
+      } catch (err) {
+        alert("Unable to contact backend server.");
+      } finally {
+        btn.innerText = "Create Account";
+        btn.disabled = false;
+      }
+    }
+
+    // 3. Google OAuth Redirect simulator
+    function openGoogleModal() {
+      document.getElementById("google-auth-modal").classList.remove("hidden");
+    }
+
+    function closeGoogleModal() {
+      document.getElementById("google-auth-modal").classList.add("hidden");
+    }
+
+    async function submitCustomGoogleAccount() {
+      const email = document.getElementById("google-custom-email").value.trim().toLowerCase();
+      if (!email) {
+        alert("Please enter a valid Gmail address.");
+        return;
+      }
+      if (!email.endsWith("@gmail.com")) {
+        alert("Please enter a valid Gmail address ending with '@gmail.com'.");
+        return;
+      }
+      closeGoogleModal();
+      const name = email.split('@')[0];
+      await executeGoogleLogin(email, name);
+    }
+
+    async function executeGoogleLogin(email, name) {
+      try {
+        const resp = await fetch(`${API_URL}/auth/google-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email, name: name })
+        });
+        
+        if (resp.ok) {
+          const data = await resp.json();
+          localStorage.setItem("token", data.access_token);
+          localStorage.setItem("email", email);
+          checkAuthenticationState();
+        } else {
+          alert("Google Sign-In failed.");
+        }
+      } catch (err) {
+        // Local offline fallback
+        localStorage.setItem("token", "mock-offline-token");
+        localStorage.setItem("email", email);
+        checkAuthenticationState();
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("email");
+      checkAuthenticationState();
+    }
+
+    // Verify session state and show UI
+    async function checkAuthenticationState() {
+      const token = localStorage.getItem("token");
+      const email = localStorage.getItem("email");
+      
+      const loginView = document.getElementById("view-login");
+      const header = document.getElementById("main-header");
+      
+      const views = ['landing', 'dashboard', 'resume', 'github', 'interview', 'jobmatch', 'careertwin', 'recruiter', 'public-profile'];
+      
+      if (token && email) {
+        loginView.classList.add("hidden");
+        header.classList.remove("hidden");
+        document.getElementById("user-display").innerText = email;
+        
+        switchTab("landing");
+        checkBackendConnection();
+      } else {
+        loginView.classList.remove("hidden");
+        header.classList.add("hidden");
+        
+        // Hide views
+        views.forEach(v => {
+          const el = document.getElementById(`view-${v}`);
+          if (el) el.classList.add("hidden");
+        });
+      }
+    }
+
+    // Check connection
+    async function checkBackendConnection() {
+      const token = localStorage.getItem("token");
+      try {
+        const resp = await fetch(`${API_URL}/reports/latest`, { 
+          headers: { "Authorization": `Bearer ${token}` } 
+        });
+        isOnline = true;
+        document.getElementById("connection-badge").className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-[10px] font-bold text-green-400";
+        document.getElementById("connection-badge").innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Live API Connected';
+        loadDashboardData();
+      } catch (err) {
+        isOnline = false;
+        document.getElementById("connection-badge").className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-[10px] font-bold text-indigo-400";
+        document.getElementById("connection-badge").innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span> Offline Mode';
+        loadOfflineMockData();
+      }
+    }
+
+    // Tab switcher
+    function switchTab(tab) {
+      const views = ['landing', 'dashboard', 'resume', 'github', 'interview', 'jobmatch', 'careertwin', 'recruiter', 'public-profile'];
+      views.forEach(v => {
+        const viewEl = document.getElementById(`view-${v}`);
+        if (viewEl) viewEl.classList.add('hidden');
+        const navEl = document.getElementById(`nav-${v}`);
+        if (navEl) navEl.className = 'hover:text-indigo-400 transition-colors';
+      });
+      
+      const activeView = document.getElementById(`view-${tab}`);
+      if (activeView) activeView.classList.remove('hidden');
+      const activeNav = document.getElementById(`nav-${tab}`);
+      if (activeNav) activeNav.className = 'text-indigo-400 hover:text-indigo-300 font-bold';
+      
+      // Trigger canvas adjustments safely
+      if (tab === 'landing') setTimeout(initHero3dGlobe, 50);
+      if (tab === 'dashboard') setTimeout(initDashboardScoreOrb, 50);
+      if (tab === 'github') setTimeout(() => {
+        if (gitInitialized) {
+          setTimeout(onWindowResize, 10);
+        } else {
+          initGithub3dUniverse([]);
+        }
+      }, 50);
+      
+      if (tab === 'careertwin') setTimeout(() => setTwinTrack('Backend'), 50);
+      if (tab === 'recruiter') setTimeout(loadRecruiterHub, 50);
+      
+      setTimeout(init3dTilt, 50);
+    }
+
+    // Load Live Dashboard details
+    async function loadDashboardData() {
+      const token = localStorage.getItem("token");
+      if (!isOnline || !token) return;
+      try {
+        const resp = await fetch(`${API_URL}/reports/latest`, { headers: { "Authorization": `Bearer ${token}` } });
+        if (resp.ok) {
+          const report = await resp.json();
+          displayReportData(report);
+        } else {
+          loadOfflineMockData();
+        }
+      } catch (e) {
+        loadOfflineMockData();
+      }
+    }
+
+    let currentRepositories = [];
+    let currentSkills = ["Python", "FastAPI", "React", "Docker", "Redis"];
+
+    function loadOfflineMockData() {
+      displayReportData({
+        overall_score: 87,
+        hiring_probability: 0.89,
+        predicted_salary: 132000,
+        strengths: [
+          "Demonstrates clean architectural patterns in GitHub repositories.",
+          "Resume features high density of modern framework keywords."
+        ],
+        weaknesses: [
+          "Lacks formal cloud deployment files (Terraform configs, AWS setups).",
+          "Missing automated testing suites on frontend Boilerplate repository."
+        ],
+        roadmap: {
+          verdict: "Strong Hire",
+          personas: {
+            technical_recruiter: "Recommend proceeding to technical screening immediately.",
+            engineering_manager: "Assess team collaboration skills during the behavioral interview.",
+            cto: "Strong fit for our runway. Bring them in."
+          },
+          plan_30_days: [
+            "Build multi-stage Dockerfiles for existing projects.",
+            "Implement standard unit testing setups in NextJS."
+          ],
+          plan_90_days: [
+            "Learn Kubernetes cluster architectures and deploy local minikube nodes."
+          ],
+          committee: {
+            verdict: "Strong Hire",
+            disagreement: false,
+            disagreement_notes: "Committee shares clean alignment on candidate qualifications.",
+            agents: {
+              technical_recruiter: {
+                name: "Sarah Jenkins",
+                role: "Technical Recruiter",
+                vote: "Strong Hire",
+                confidence: 95,
+                strengths: ["Matches critical keywords.", "Structured ATS formatting."],
+                risks: [],
+                recommendations: "Recommend proceeding to technical screening immediately."
+              },
+              engineering_manager: {
+                name: "Marcus Vance",
+                role: "Engineering Manager",
+                vote: "Hire",
+                confidence: 88,
+                strengths: ["Demonstrates active GitHub presence.", "Has 3 years of hands-on dev experience."],
+                risks: ["Commit history shows minor documentation gaps."],
+                recommendations: "Assess team collaboration skills during the behavioral interview."
+              },
+              senior_engineer: {
+                name: "Elena Rostova",
+                role: "Senior Software Engineer",
+                vote: "Strong Hire",
+                confidence: 90,
+                strengths: ["Code shows solid familiarity with design patterns.", "Good utilization of async programming."],
+                risks: [],
+                recommendations: "Ask them to explain event loops."
+              },
+              staff_architect: {
+                name: "Devon Miller",
+                role: "Staff Systems Architect",
+                vote: "Hire",
+                confidence: 85,
+                strengths: ["Modular structuring.", "Clean database models."],
+                risks: ["Lacks Kubernetes configurations in public repos."],
+                recommendations: "Query caching strategy details."
+              },
+              cto: {
+                name: "Dr. Aris Thorne",
+                role: "Startup CTO",
+                vote: "Strong Hire",
+                confidence: 92,
+                strengths: ["Modern API stacks alignment.", "Active builder mindset."],
+                risks: ["Evaluate cost-optimization awareness."],
+                recommendations: "Strong fit for our runway. Bring them in."
+              },
+              hr_director: {
+                name: "Clara Higgins",
+                role: "HR Director",
+                vote: "Hire",
+                confidence: 90,
+                strengths: ["Structured communication.", "Clear track record of target certifications."],
+                risks: ["Verify soft skills in cultural round."],
+                recommendations: "Approved for final cultural-fit interview."
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function displayReportData(report) {
+      document.getElementById("dash-score").innerHTML = `${report.overall_score}<span class="text-sm text-gray-500 font-normal">/100</span>`;
+      document.getElementById("dash-prob").innerText = `${(report.hiring_probability * 100).toFixed(0)}%`;
+      document.getElementById("dash-salary").innerHTML = `$${report.predicted_salary.toLocaleString()}<span class="text-sm text-gray-500 font-normal">/yr</span>`;
+      document.getElementById("dash-verdict").innerText = report.roadmap.verdict;
+
+      // Strengths & Weaknesses
+      document.getElementById("dash-strengths").innerHTML = report.strengths.map(s => `<li>${s}</li>`).join("");
+      document.getElementById("dash-weaknesses").innerHTML = report.weaknesses.map(w => `<li>${w}</li>`).join("");
+      document.getElementById("dash-road-30").innerHTML = (report.roadmap.plan_30_days || []).map(p => `<li>${p}</li>`).join("");
+      document.getElementById("dash-road-90").innerHTML = (report.roadmap.plan_90_days || []).map(p => `<li>${p}</li>`).join("");
+
+      // Render 6-agent Hiring Committee
+      const comm = report.roadmap.committee || report.committee || {};
+      const agents = comm.agents || {};
+      const grid = document.getElementById("dashboard-committee-grid");
+      const consensusBadge = document.getElementById("committee-consensus-badge");
+
+      if (comm.verdict) {
+        consensusBadge.innerText = `Consensus: ${comm.verdict}`;
+        consensusBadge.classList.remove("hidden");
+      } else {
+        consensusBadge.classList.add("hidden");
+      }
+
+      if (Object.keys(agents).length > 0) {
+        grid.innerHTML = Object.entries(agents).map(([key, agent]) => {
+          let badgeColor = "text-blue-400";
+          if (agent.vote === "Strong Hire") badgeColor = "text-green-400";
+          else if (agent.vote === "Hire") badgeColor = "text-indigo-400";
+          else if (agent.vote === "Maybe") badgeColor = "text-yellow-400";
+          else if (agent.vote === "Reject") badgeColor = "text-red-400";
+
+          return `
+            <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-3 tilt-card">
+              <div class="flex justify-between items-start border-b border-white/5 pb-3 float-depth-sm">
+                <div>
+                  <h4 class="text-sm font-black font-outfit text-white">${agent.name}</h4>
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-gray-400">${agent.role}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-black uppercase ${badgeColor}">${agent.vote}</span>
+                  <span class="block text-[8px] text-gray-500 font-light mt-0.5">Confidence: ${agent.confidence}%</span>
+                </div>
+              </div>
+              <div class="text-xs font-light text-gray-300 leading-relaxed float-depth-md flex flex-col gap-2">
+                <p class="italic">"${agent.recommendations}"</p>
+                <div>
+                  <span class="text-[8px] font-bold text-green-400 uppercase tracking-wider block mb-1">Key Strengths</span>
+                  <ul class="list-disc list-inside text-gray-400 text-[10px] flex flex-col gap-0.5">
+                    ${(agent.strengths || []).map(s => `<li>${s}</li>`).join("")}
+                  </ul>
+                </div>
+                ${agent.risks && agent.risks.length > 0 ? `
+                <div>
+                  <span class="text-[8px] font-bold text-red-400 uppercase tracking-wider block mb-1">Identified Risks</span>
+                  <ul class="list-disc list-inside text-gray-400 text-[10px] flex flex-col gap-0.5">
+                    ${(agent.risks || []).map(r => `<li>${r}</li>`).join("")}
+                  </ul>
+                </div>` : ''}
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else {
+        const personas = report.roadmap.personas || {};
+        grid.innerHTML = `
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-blue-400">Technical Recruiter</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "${personas.technical_recruiter || 'No recommendation yet.'}"
+            </p>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-green-400">Engineering Manager</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "${personas.engineering_manager || 'No recommendation yet.'}"
+            </p>
+          </div>
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex items-center gap-2 border-b border-white/5 pb-3 float-depth-sm">
+              <span class="text-xs font-bold uppercase tracking-widest text-purple-400">Startup CTO</span>
+            </div>
+            <p class="text-gray-300 text-sm font-light leading-relaxed float-depth-md">
+              "${personas.cto || 'No recommendation yet.'}"
+            </p>
+          </div>
+        `;
+      }
+      setTimeout(init3dTilt, 50);
+    }
+
+    // GitHub Scan
+    async function runGithubScan() {
+      const username = document.getElementById("githubInput").value;
+      const token = localStorage.getItem("token");
+      if (!username || !token) return;
+      
+      const resultsDiv = document.getElementById("github-results");
+      resultsDiv.classList.add("hidden");
+      
+      if (isOnline) {
+        try {
+          const resp = await fetch(`${API_URL}/github/scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ username })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            displayGithubData(data);
+            loadDashboardData();
+            return;
+          }
+        } catch (e) {}
+      }
+      
+      displayGithubData({
+        username: username,
+        avatar_url: "https://avatars.githubusercontent.com/u/9919?v=4",
+        public_repos: 14,
+        followers: 38,
+        github_score: 89,
+        repositories: [
+          {
+            name: "distributed-task-runner",
+            html_url: `https://github.com/${username}/distributed-task-runner`,
+            description: "High-throughput asynchronous task queue scheduler built with Rust and Redis.",
+            stargazers_count: 42,
+            forks_count: 12,
+            primary_language: "Rust",
+            code_quality_score: 94,
+            documentation_score: 88,
+            architecture_score: 95,
+            security_score: 90
+          },
+          {
+            name: "fastapi-saas-boilerplate",
+            html_url: `https://github.com/${username}/fastapi-saas-boilerplate`,
+            description: "Production-ready FastAPI boilerplate with JWT OAuth2, Celery background tasks.",
+            stargazers_count: 28,
+            forks_count: 8,
+            primary_language: "Python",
+            code_quality_score: 90,
+            documentation_score: 92,
+            architecture_score: 88,
+            security_score: 85
+          }
+        ]
+      });
+    }
+
+    function displayGithubData(data) {
+      document.getElementById("git-avatar").src = data.avatar_url;
+      document.getElementById("git-username").innerText = data.username;
+      document.getElementById("git-stats").innerText = `Repos: ${data.public_repos} | Followers: ${data.followers}`;
+      document.getElementById("git-score").innerText = data.github_score;
+
+      // Ensure all repository parameters exist (using fallbacks for offline mode)
+      currentRepositories = (data.repositories || []).map((r, idx) => {
+        const maturity_level = r.maturity_level || (5 - (idx % 3));
+        const explanation = r.maturity_explanation || `Repository structure matches Level ${maturity_level} specifications.`;
+        const assessment = r.assessment || {
+          architecture: r.architecture_score || 88,
+          scalability: r.architecture_score ? Math.max(30, r.architecture_score - 5) : 82,
+          security: r.security_score || 80,
+          cicd: r.code_quality_score || 85
+        };
+        const reviewer = r.reviewer || {
+          architecture_review: `Clean separation of concerns across packages. Code shows solid interface design.`,
+          scalability_review: `Asynchronous processes handled smoothly. Recommend connection pool tuning under high load.`,
+          security_review: `No exposed credentials or secrets detected. Basic input sanitization looks active.`,
+          refactoring_recommendations: [
+            "Decouple routing controller dependencies.",
+            "Write additional unit testing coverage suites."
+          ],
+          technical_debt_report: `Minimal code smells. Estimated refactor timeline: ${maturity_level >= 4 ? '2 hours' : '5 hours'}.`,
+          production_readiness_report: `${maturity_level >= 4 ? 'Staging Ready' : 'Development Stage'}.`
+        };
+        return {
+          ...r,
+          maturity_level,
+          maturity_explanation: explanation,
+          assessment,
+          reviewer
+        };
+      });
+
+      const reposList = document.getElementById("git-repos-list");
+      reposList.innerHTML = currentRepositories.map(r => `
+        <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+          <div class="flex justify-between items-start gap-4 float-depth-sm">
+            <div>
+              <a href="${r.html_url}" target="_blank" class="text-base font-bold text-indigo-400 hover:underline">${r.name}</a>
+              <div class="mt-1 flex flex-wrap gap-2 items-center">
+                <span class="text-[9px] px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold uppercase">
+                  Level ${r.maturity_level} Maturity
+                </span>
+                <span class="text-[9px] text-gray-400 font-light">${r.primary_language}</span>
+              </div>
+              <p class="text-gray-400 text-xs font-light mt-2">${r.description || 'No description provided.'}</p>
+            </div>
+            <div class="text-xs text-gray-400 whitespace-nowrap">⭐ ${r.stargazers_count} | 🍴 ${r.forks_count}</div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 border-t border-white/5 pt-4 float-depth-md">
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Code Quality</span>
+              <span class="text-sm font-bold text-gray-300">${r.code_quality_score}/100</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Documentation</span>
+              <span class="text-sm font-bold text-gray-300">${r.documentation_score}/100</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Architecture</span>
+              <span class="text-sm font-bold text-gray-300">${r.architecture_score}/100</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-1">Security</span>
+              <span class="text-sm font-bold text-gray-300">${r.security_score}/100</span>
+            </div>
+          </div>
+          <button onclick="openCodeReviewModal('${r.name}')" class="mt-4 w-full py-2 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/20 rounded-xl text-xs font-bold text-indigo-300 transition-all">
+            View AI Architect Review
+          </button>
+        </div>
+      `).join("");
+
+      document.getElementById("github-results").classList.remove("hidden");
+      setTimeout(() => {
+        initGithub3dUniverse(currentRepositories);
+        init3dTilt();
+      }, 50);
+    }
+
+    // Resume Scan
+    function resumeSelected() {
+      const input = document.getElementById("resumeFileInput");
+      if (input.files && input.files.length > 0) {
+        document.getElementById("fileLabel").innerText = input.files[0].name;
+        document.getElementById("btnResumeScan").style.display = "block";
+      }
+    }
+
+    async function runResumeScan() {
+      const input = document.getElementById("resumeFileInput");
+      const token = localStorage.getItem("token");
+      if (!input.files || input.files.length === 0 || !token) return;
+
+      const btn = document.getElementById("btnResumeScan");
+      btn.innerText = "Analyzing PDF...";
+      btn.disabled = true;
+
+      if (isOnline) {
+        try {
+          const formData = new FormData();
+          formData.append("file", input.files[0]);
+          const resp = await fetch(`${API_URL}/resume/upload`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            displayResumeData({
+              ats_score: data.ats_score,
+              resume_quality_score: data.resume_quality_score,
+              extracted_skills: data.structured_data.extracted_skills || [],
+              missing_skills: data.structured_data.missing_skills || []
+            });
+            btn.innerText = "Start ATS Audit";
+            btn.disabled = false;
+            loadDashboardData();
+            return;
+          }
+        } catch (e) {}
+      }
+
+      setTimeout(() => {
+        displayResumeData({
+          ats_score: 82,
+          resume_quality_score: 85,
+          extracted_skills: ["Python", "FastAPI", "React", "Docker", "PostgreSQL", "Redis"],
+          missing_skills: ["Kubernetes", "CI/CD", "Terraform"]
+        });
+        btn.innerText = "Start ATS Audit";
+        btn.disabled = false;
+      }, 1000);
+    }
+
+    function displayResumeData(data) {
+      document.getElementById("res-ats").innerText = `${data.ats_score}%`;
+      document.getElementById("res-quality").innerText = `${data.resume_quality_score}/100`;
+
+      document.getElementById("res-extracted-skills").innerHTML = data.extracted_skills.map(s => `
+        <span class="px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-semibold">${s}</span>
+      `).join("");
+
+      document.getElementById("res-missing-skills").innerHTML = data.missing_skills.map(s => `
+        <span class="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold">${s}</span>
+      `).join("");
+
+      document.getElementById("resume-results").classList.remove("hidden");
+      setTimeout(init3dTilt, 50);
+    }
+
+    // Interview coordination
+    function setInterviewTrack(track) {
+      selectedTrack = track;
+      document.getElementById("btn-track-tech").className = track === "Technical" ? "px-5 py-2.5 rounded-xl border border-indigo-500 bg-indigo-500/10 text-indigo-300 text-xs font-bold" : "px-5 py-2.5 rounded-xl border border-white/5 bg-white/5 text-gray-400 text-xs font-bold hover:text-gray-300";
+      document.getElementById("btn-track-sys").className = track === "System Design" ? "px-5 py-2.5 rounded-xl border border-indigo-500 bg-indigo-500/10 text-indigo-300 text-xs font-bold" : "px-5 py-2.5 rounded-xl border border-white/5 bg-white/5 text-gray-400 text-xs font-bold hover:text-gray-300";
+    }
+
+    async function startInterviewSession() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      document.getElementById("interview-config").classList.add("hidden");
+      document.getElementById("interview-chat").classList.remove("hidden");
+      
+      const chat = document.getElementById("chat-messages");
+      chat.innerHTML = "";
+
+      if (isOnline) {
+        try {
+          const resp = await fetch(`${API_URL}/interview/start`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ type: selectedTrack })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            activeInterviewId = data.interview_id;
+            appendMessage("interviewer", data.question);
+            return;
+          }
+        } catch (e) {}
+      }
+
+      activeInterviewId = "mock-session-id";
+      const q = selectedTrack === "System Design" ? "How would you design a distributed rate limiter that handles millions of active user tokens?" : "Explain how ASGI differs from WSGI in Python architectures.";
+      appendMessage("interviewer", q);
+    }
+
+    function appendMessage(role, text) {
+      const chat = document.getElementById("chat-messages");
+      const isInterviewer = role === "interviewer";
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `max-w-[80%] rounded-xl p-4 text-sm font-light leading-relaxed ${isInterviewer ? 'bg-indigo-950/20 border border-indigo-500/10 self-start text-indigo-200 shadow-md shadow-indigo-950/20' : 'bg-white/5 border border-white/5 self-end text-gray-200'}`;
+      msgDiv.innerHTML = `<div class="text-[9px] font-bold uppercase tracking-widest mb-1.5 opacity-70">${isInterviewer ? 'AI Recruiter' : 'You'}</div><div>${text}</div>`;
+      chat.appendChild(msgDiv);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function submitInterviewResponse(e) {
+      e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const val = input.value.trim();
+      const token = localStorage.getItem("token");
+      if (!val || !token) return;
+
+      appendMessage("user", val);
+      input.value = "";
+
+      if (isOnline) {
+        try {
+          const resp = await fetch(`${API_URL}/interview/respond`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ interview_id: activeInterviewId, user_response: val })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            appendMessage("interviewer", data.question);
+            if (data.finished) {
+              finishInterview();
+            }
+            return;
+          }
+        } catch (e) {}
+      }
+
+      setTimeout(() => {
+        const chatDivs = Array.from(document.querySelectorAll("#chat-messages > div"));
+        const userDivs = chatDivs.filter(d => d.querySelector("div").innerText.includes("YOU"));
+        
+        if (userDivs.length >= 3) {
+          const allText = userDivs.map(m => m.querySelectorAll("div")[1].innerText.toLowerCase()).join(" ");
+          const keywords = {
+            "Technical": ["asgi", "wsgi", "async", "await", "concurrency", "thread", "process", "loop", "uvicorn", "starlette"],
+            "System Design": ["redis", "token", "bucket", "limiter", "scale", "balancer", "database", "cache", "shard", "hashing", "cdn"]
+          };
+          
+          const targetKws = keywords[selectedTrack] || keywords["Technical"];
+          
+          const ignorancePhrases = [
+            "i don't know", "i do not know", "no idea", "not sure", "don't understand", 
+            "do not understand", "dunno", "can't explain", "cannot explain", "skip", 
+            "pass", "forgot", "have no clue", "no clue", "don't recall"
+          ];
+          let ignoranceCount = 0;
+          ignorancePhrases.forEach(p => {
+            if (allText.includes(p)) ignoranceCount++;
+          });
+          
+          let matched = 0;
+          targetKws.forEach(kw => {
+            if (allText.includes(kw)) {
+              const idx = allText.indexOf(kw);
+              const preceding = allText.substring(Math.max(0, idx - 30), idx);
+              const negations = ["not", "don't", "dont", "no", "never", "can't", "cant", "unable", "without"];
+              if (negations.some(neg => preceding.includes(neg))) {
+                return;
+              }
+              matched++;
+            }
+          });
+          
+          let baseScore = 30;
+          if (ignoranceCount > 0) {
+            baseScore -= 15 * ignoranceCount;
+          }
+          let score = baseScore + (matched * 8);
+          
+          const wordsCount = allText.split(/\s+/).filter(w => w.length > 0).length;
+          if (ignoranceCount === 0 && matched > 0) {
+            const lenBonus = Math.min(15, Math.floor(wordsCount / 10));
+            score += lenBonus;
+          } else {
+            score -= Math.min(10, Math.floor(wordsCount / 15));
+          }
+          
+          score = Math.min(98, Math.max(10, score));
+          if (wordsCount < 12) {
+            score = Math.min(score, 35);
+          }
+          
+          appendMessage("interviewer", `Thank you for completing this mock interview. I have finalized your ratings. Your calculated score is ${score}%.`);
+          finishInterview();
+        } else {
+          const followUps = {
+            "Technical": "Interesting answer. Explain how python's Global Interpreter Lock (GIL) impacts thread concurrency?",
+            "System Design": "Understood. How would you handle database lock contentions under high concurrency in that setup?"
+          };
+          const nextQ = followUps[selectedTrack] || "Interesting answer. How would you design unit tests to check race conditions in this approach?";
+          appendMessage("interviewer", nextQ);
+        }
+      }, 800);
+    }
+
+    function finishInterview() {
+      document.getElementById("chat-form").classList.add("hidden");
+      document.getElementById("chat-finish-actions").classList.remove("hidden");
+    }
+
+    // Reset view
+    function resetInterviewView() {
+      document.getElementById("chat-form").classList.remove("hidden");
+      document.getElementById("chat-finish-actions").classList.add("hidden");
+      document.getElementById("interview-chat").classList.add("hidden");
+      document.getElementById("interview-config").classList.remove("hidden");
+    }
+
+    // 1. Code Review Modal handlers
+    function openCodeReviewModal(repoName) {
+      const repo = currentRepositories.find(r => r.name === repoName);
+      if (!repo) return;
+      
+      document.getElementById("review-modal-title").innerText = ` ${repo.name}`;
+      
+      const assess = repo.assessment || { architecture: 75, scalability: 70, security: 70, cicd: 65 };
+      document.getElementById("review-score-arch").innerText = `${assess.architecture}/100`;
+      document.getElementById("review-score-scale").innerText = `${assess.scalability}/100`;
+      document.getElementById("review-score-sec").innerText = `${assess.security}/100`;
+      document.getElementById("review-score-ops").innerText = `${assess.cicd}/100`;
+      
+      const rev = repo.reviewer || {
+        architecture_review: "Basic codebase structure.",
+        scalability_review: "Scaling metrics not analyzed.",
+        security_review: "Security scan pending.",
+        refactoring_recommendations: ["Create automated tests.", "Containerize the application."],
+        technical_debt_report: "Medium technical debt.",
+        production_readiness_report: "Development stage."
+      };
+      
+      document.getElementById("review-text-arch").innerText = rev.architecture_review;
+      document.getElementById("review-text-scale").innerText = rev.scalability_review;
+      document.getElementById("review-text-sec").innerText = rev.security_review;
+      
+      const list = document.getElementById("review-refactoring-list");
+      list.innerHTML = (rev.refactoring_recommendations || []).map(rec => `<li>${rec}</li>`).join("");
+      
+      document.getElementById("review-debt-text").innerText = rev.technical_debt_report;
+      document.getElementById("review-readiness-text").innerText = rev.production_readiness_report;
+      
+      document.getElementById("code-review-modal").classList.remove("hidden");
+    }
+
+    function closeCodeReviewModal() {
+      document.getElementById("code-review-modal").classList.add("hidden");
+    }
+
+    // 2. Job Match handlers
+    async function runJobMatchAnalysis() {
+      const jd = document.getElementById("jd-input-text").value.trim();
+      if (!jd) {
+        alert("Please paste a job description first.");
+        return;
+      }
+      
+      const btn = document.getElementById("btn-run-match");
+      btn.innerText = "Analyzing Compatibility...";
+      btn.disabled = true;
+      
+      const token = localStorage.getItem("token");
+      
+      if (isOnline && token) {
+        try {
+          const resp = await fetch(`${API_URL}/match/job-description`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ job_description: jd })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            displayJobMatchData(data);
+            return;
+          }
+        } catch (e) {}
+      }
+      
+      // Fallback evaluation client-side
+      setTimeout(() => {
+        const matching = [];
+        const missing = [];
+        const techKeywords = ["python", "fastapi", "react", "docker", "redis", "postgresql", "kubernetes", "aws", "terraform"];
+        techKeywords.forEach(kw => {
+          if (jd.toLowerCase().includes(kw)) {
+            if (currentSkills.map(s => s.toLowerCase()).includes(kw)) {
+              matching.push(kw.charAt(0).toUpperCase() + kw.slice(1));
+            } else {
+              missing.push(kw.charAt(0).toUpperCase() + kw.slice(1));
+            }
+          }
+        });
+        
+        if (matching.length === 0 && missing.length === 0) {
+          matching.push("Python", "FastAPI");
+          missing.push("Kubernetes", "AWS");
+        }
+        
+        const ratio = matching.length / (matching.length + missing.length || 1);
+        const match_score = Math.round(50 + ratio * 40);
+        const ats_score = Math.round(55 + ratio * 35);
+        const tech_score = Math.round(48 + ratio * 45);
+        const gap_score = Math.round(100 - ratio * 100);
+        
+        displayJobMatchData({
+          match_score,
+          ats_match_score: ats_score,
+          technical_match_score: tech_score,
+          skill_gap_score: gap_score,
+          missing_skills: missing,
+          diagnosis: {
+            rejection_reasons: [
+              missing.length > 0 ? `Missing required skills: ${missing.slice(0, 3).join(", ")}` : "Lacks specific framework experience.",
+              "Lacks formal cloud scaling configurations."
+            ],
+            action_plan: [
+              "Add microservice deployment examples utilizing missing stack.",
+              "Document unit test coverage in GitHub repository READMEs."
+            ]
+          },
+          roadmap: {
+            plan_30_days: [
+              `Study and implement: ${missing[0] || 'Cloud deployments'}.`,
+              "Build modular project prototype using best practices."
+            ]
+          }
+        });
+      }, 1000);
+    }
+    
+    function displayJobMatchData(data) {
+      document.getElementById("match-score-overall").innerText = `${data.match_score || 0}%`;
+      document.getElementById("match-score-ats").innerText = `${data.ats_match_score || 0}%`;
+      document.getElementById("match-score-tech").innerText = `${data.technical_match_score || 0}%`;
+      document.getElementById("match-score-gap").innerText = `${data.skill_gap_score || 0}%`;
+      
+      const diag = data.diagnosis || {};
+      const reasonsList = document.getElementById("match-diagnosis-reasons");
+      reasonsList.innerHTML = (diag.rejection_reasons || []).map(r => `<li>${r}</li>`).join("");
+      
+      const actionsList = document.getElementById("match-diagnosis-actions");
+      actionsList.innerHTML = (diag.action_plan || []).map(a => `<li>${a}</li>`).join("");
+      
+      const missingContainer = document.getElementById("match-missing-skills");
+      missingContainer.innerHTML = (data.missing_skills || []).map(s => `
+        <span class="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-semibold">${s}</span>
+      `).join("");
+      
+      const road = data.roadmap || {};
+      const roadList = document.getElementById("match-road-30");
+      roadList.innerHTML = (road.plan_30_days || []).map(p => `<li>${p}</li>`).join("");
+      
+      document.getElementById("match-results-panel").classList.remove("hidden");
+      
+      const btn = document.getElementById("btn-run-match");
+      btn.innerText = "Analyze JD Compatibility";
+      btn.disabled = false;
+      setTimeout(init3dTilt, 50);
+    }
+
+    // 3. Career Twin Simulator
+    function setTwinTrack(track) {
+      const tracks = ['backend', 'ai', 'devops'];
+      tracks.forEach(t => {
+        const btn = document.getElementById(`btn-twin-${t}`);
+        if (btn) {
+          if (t === track.toLowerCase()) {
+            btn.className = "px-4 py-2 bg-indigo-600 text-white text-[10px] font-bold uppercase rounded-lg transition-all";
+          } else {
+            btn.className = "px-4 py-2 text-gray-400 hover:text-gray-300 text-[10px] font-bold uppercase rounded-lg transition-all";
+          }
+        }
+      });
+      renderTwinSimulation(track);
+    }
+    
+    function renderTwinSimulation(track) {
+      const trackExpectations = {
+        "Backend": {
+          title: "Backend Engineer",
+          skills: ["Python", "FastAPI", "SQLAlchemy", "PostgreSQL", "Redis", "Docker", "CI/CD", "Celery", "System Design"],
+          projects: ["Distributed Task Runner with Redis", "API Gateway & Rate Limiter", "Relational Database Clustering"],
+          certs: ["AWS Certified Developer - Associate", "PostgreSQL Professional Cert"]
+        },
+        "AI": {
+          title: "AI Engineer",
+          skills: ["Python", "PyTorch", "LangChain", "Vector Databases", "ChromaDB", "Transformers", "Pandas", "Scikit-Learn", "LLM Fine-Tuning"],
+          projects: ["RAG QA System over PDF documents", "Fine-tuned Llama Text Classification", "Predictive Analytics pipeline"],
+          certs: ["TensorFlow Developer Certificate", "Google Cloud Professional Machine Learning Engineer"]
+        },
+        "DevOps": {
+          title: "DevOps Engineer",
+          skills: ["Docker", "Kubernetes", "Terraform", "AWS", "CI/CD", "GitHub Actions", "Prometheus", "Grafana", "Linux", "Shell Scripting"],
+          projects: ["Auto-scaling K8s Microservice Deployments", "Infrastructure-as-code deployment via Terraform", "Centralized Grafana Observability Dashboard"],
+          certs: ["Certified Kubernetes Administrator (CKA)", "AWS Certified DevOps Engineer - Professional"]
+        }
+      };
+      
+      const config = trackExpectations[track] || trackExpectations["Backend"];
+      const userSkillsLower = currentSkills.map(s => s.toLowerCase());
+      
+      const matched = [];
+      const missing = [];
+      config.skills.forEach(s => {
+        if (userSkillsLower.includes(s.toLowerCase())) {
+          matched.push(s);
+        } else {
+          missing.push(s);
+        }
+      });
+      
+      const weeks = Math.max(4, missing.length * 4);
+      const prob = Math.round((0.95 - (missing.length * 0.06)) * 100);
+      const successRate = Math.max(35, Math.min(95, prob));
+      
+      document.getElementById("twin-title").innerText = config.title;
+      document.getElementById("twin-time").innerText = `${weeks} weeks`;
+      document.getElementById("twin-success").innerText = `${successRate}%`;
+      
+      document.getElementById("twin-certs").innerHTML = config.certs.map(c => `
+        <div class="flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          ${c}
+        </div>
+      `).join("");
+      
+      document.getElementById("twin-matched-skills").innerHTML = matched.map(s => `
+        <span class="px-2 py-1 rounded bg-green-500/10 text-green-400 border border-green-500/20 text-[10px] font-semibold">${s}</span>
+      `).join("");
+      
+      document.getElementById("twin-missing-skills").innerHTML = missing.map(s => `
+        <span class="px-2 py-1 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-[10px] font-semibold">${s}</span>
+      `).join("");
+      
+      document.getElementById("twin-projects").innerHTML = config.projects.map(p => `
+        <div class="bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-1 hover:border-indigo-500/30 transition-all">
+          <span class="font-bold text-gray-200">${p}</span>
+          <span class="text-[10px] text-gray-400">Target project to highlight in transition portfolio.</span>
+        </div>
+      `).join("");
+    }
+
+    // 4. Recruiter Candidate Workspace handlers
+    let recruiterCandidates = [];
+    async function loadRecruiterHub() {
+      const grid = document.getElementById("recruiter-candidates-grid");
+      grid.innerHTML = `<div class="col-span-1 md:col-span-3 text-center text-gray-400 text-sm py-12">Fetching recruiter candidate roster...</div>`;
+      
+      try {
+        const resp = await fetch(`${API_URL}/recruiter/candidates`);
+        if (resp.ok) {
+          recruiterCandidates = await resp.json();
+        } else {
+          recruiterCandidates = getMockCandidates();
+        }
+      } catch (err) {
+        recruiterCandidates = getMockCandidates();
+      }
+      displayRecruiterCandidates(recruiterCandidates);
+    }
+    
+    function getMockCandidates() {
+      return [
+        {
+          username: "jane_dev",
+          full_name: "Jane Doe",
+          email: "jane.doe@gmail.com",
+          github_score: 91,
+          overall_score: 92,
+          hiring_probability: 0.94,
+          verdict: "Strong Hire",
+          skills: ["Python", "FastAPI", "React", "Docker", "AWS"]
+        },
+        {
+          username: "bob_sys",
+          full_name: "Bob Architect",
+          email: "bob.systems@gmail.com",
+          github_score: 88,
+          overall_score: 87,
+          hiring_probability: 0.85,
+          verdict: "Hire",
+          skills: ["Go", "Kubernetes", "Docker", "Terraform", "CI/CD"]
+        },
+        {
+          username: "alice_ml",
+          full_name: "Alice Vance",
+          email: "alice.ml@gmail.com",
+          github_score: 94,
+          overall_score: 93,
+          hiring_probability: 0.95,
+          verdict: "Strong Hire",
+          skills: ["Python", "PyTorch", "Transformers", "Scikit-Learn"]
+        }
+      ];
+    }
+    
+    function displayRecruiterCandidates(candidates) {
+      const grid = document.getElementById("recruiter-candidates-grid");
+      if (!candidates || candidates.length === 0) {
+        grid.innerHTML = `<div class="col-span-1 md:col-span-3 text-center text-gray-400 text-sm py-12">No matching candidates found.</div>`;
+        return;
+      }
+      
+      grid.innerHTML = candidates.map(c => {
+        let verdictColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/20";
+        if (c.verdict === "Strong Hire") verdictColor = "text-green-400 bg-green-500/10 border-green-500/20";
+        else if (c.verdict === "Hire") verdictColor = "text-blue-400 bg-blue-500/10 border-blue-500/20";
+        else if (c.verdict === "Maybe") verdictColor = "text-yellow-400 bg-yellow-500/10 border-yellow-500/20";
+        else if (c.verdict === "Reject") verdictColor = "text-red-400 bg-red-500/10 border-red-500/20";
+
+        return `
+          <div class="glass-card-3d rounded-2xl p-6 flex flex-col gap-4 tilt-card">
+            <div class="flex justify-between items-start border-b border-white/5 pb-3">
+              <div>
+                <h3 class="text-base font-bold font-outfit text-white">${c.full_name}</h3>
+                <span class="text-xs text-indigo-400 font-semibold">@${c.username}</span>
+              </div>
+              <span class="text-[9px] px-2.5 py-1 rounded-full border font-bold uppercase tracking-wider ${verdictColor}">${c.verdict}</span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 text-center my-1">
+              <div class="bg-white/5 rounded-xl p-2.5">
+                <span class="text-[8px] text-gray-500 uppercase font-semibold block mb-0.5">Overall</span>
+                <span class="text-sm font-black text-gray-200 font-outfit">${c.overall_score || c.github_score}</span>
+              </div>
+              <div class="bg-white/5 rounded-xl p-2.5">
+                <span class="text-[8px] text-gray-500 uppercase font-semibold block mb-0.5">Hiring Prob</span>
+                <span class="text-sm font-black text-green-400 font-outfit">${Math.round(c.hiring_probability * 100)}%</span>
+              </div>
+              <div class="bg-white/5 rounded-xl p-2.5">
+                <span class="text-[8px] text-gray-500 uppercase font-semibold block mb-0.5">GitHub</span>
+                <span class="text-sm font-black text-indigo-400 font-outfit">${c.github_score}</span>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-[8px] text-gray-500 uppercase font-semibold block mb-1">Key Stack</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${(c.skills || []).map(s => `<span class="px-1.5 py-0.5 rounded bg-white/5 text-gray-300 text-[10px] font-medium">${s}</span>`).join("")}
+              </div>
+            </div>
+
+            <button onclick="viewPublicCandidate('${c.username}')" class="mt-2 w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg transition-all">
+              Inspect Candidate Profile
+            </button>
+          </div>
+        `;
+      }).join("");
+      
+      setTimeout(init3dTilt, 50);
+    }
+    
+    function viewPublicCandidate(username) {
+      switchTab("public-profile");
+      loadPublicProfile(username);
+    }
+    
+    function filterRecruiterCandidates() {
+      const q = document.getElementById("recruiter-search").value.toLowerCase().trim();
+      if (!q) {
+        displayRecruiterCandidates(recruiterCandidates);
+        return;
+      }
+      const filtered = recruiterCandidates.filter(c => 
+        c.full_name.toLowerCase().includes(q) || 
+        c.username.toLowerCase().includes(q) || 
+        (c.skills || []).some(s => s.toLowerCase().includes(q))
+      );
+      displayRecruiterCandidates(filtered);
+    }
+    
+    function sortCandidates(criteria) {
+      let sorted = [...recruiterCandidates];
+      if (criteria === 'overall') {
+        sorted.sort((a, b) => (b.overall_score || b.github_score) - (a.overall_score || a.github_score));
+      } else if (criteria === 'probability') {
+        sorted.sort((a, b) => b.hiring_probability - a.hiring_probability);
+      }
+      displayRecruiterCandidates(sorted);
+    }
+
+    // 5. Recruiter Attention Gaze Heatmap Overlay
+    let heatmapActive = false;
+    let heatmapMouseX = -100;
+    let heatmapMouseY = -100;
+    
+    function toggleRecruiterHeatmap() {
+      const canvas = document.getElementById("recruiter-heatmap-canvas");
+      if (!canvas) return;
+      
+      heatmapActive = !heatmapActive;
+      if (heatmapActive) {
+        canvas.classList.remove("hidden");
+        registerHeatmapHandlers();
+        animateHeatmap();
+      } else {
+        canvas.classList.add("hidden");
+        unregisterHeatmapHandlers();
+      }
+    }
+    
+    function registerHeatmapHandlers() {
+      window.addEventListener("mousemove", updateHeatmapMouse);
+      window.addEventListener("resize", resizeHeatmapCanvas);
+      resizeHeatmapCanvas();
+    }
+    
+    function unregisterHeatmapHandlers() {
+      window.removeEventListener("mousemove", updateHeatmapMouse);
+      window.removeEventListener("resize", resizeHeatmapCanvas);
+    }
+    
+    function updateHeatmapMouse(e) {
+      heatmapMouseX = e.clientX;
+      heatmapMouseY = e.clientY;
+    }
+    
+    function resizeHeatmapCanvas() {
+      const canvas = document.getElementById("recruiter-heatmap-canvas");
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    function animateHeatmap() {
+      if (!heatmapActive) return;
+      requestAnimationFrame(animateHeatmap);
+      drawAttentionHeatmap();
+    }
+    
+    function drawAttentionHeatmap() {
+      const canvas = document.getElementById("recruiter-heatmap-canvas");
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const selectors = [
+        { id: "dash-score", intensity: 0.95 },
+        { id: "dash-prob", intensity: 0.85 },
+        { id: "dashboard-committee-grid", intensity: 0.75 },
+        { id: "recruiter-candidates-grid", intensity: 0.80 },
+        { id: "pub-rec-score", intensity: 0.90 }
+      ];
+      
+      selectors.forEach(sel => {
+        const el = document.getElementById(sel.id);
+        if (el && el.offsetParent !== null) {
+          const rect = el.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          const radius = Math.max(rect.width, rect.height) * 0.8;
+          
+          drawHeatBlob(ctx, cx, cy, radius, sel.intensity);
+        }
+      });
+      
+      if (heatmapMouseX > 0 && heatmapMouseY > 0) {
+        drawHeatBlob(ctx, heatmapMouseX, heatmapMouseY, 120, 0.65);
+      }
+    }
+    
+    function drawHeatBlob(ctx, x, y, radius, intensity) {
+      const grad = ctx.createRadialGradient(x, y, 2, x, y, radius);
+      grad.addColorStop(0, `rgba(239, 68, 68, ${intensity * 0.45})`);
+      grad.addColorStop(0.25, `rgba(249, 115, 22, ${intensity * 0.35})`);
+      grad.addColorStop(0.5, `rgba(234, 179, 8, ${intensity * 0.20})`);
+      grad.addColorStop(0.75, `rgba(34, 197, 94, ${intensity * 0.08})`);
+      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 6. Public Profile read-only views
+    let currentPublicProfile = null;
+    async function loadPublicProfile(username) {
+      const container = document.getElementById("pub-rec-committee-grid");
+      container.innerHTML = `<div class="col-span-1 md:col-span-3 text-center text-gray-400 text-sm py-12">Scouting public candidate data for @${username}...</div>`;
+      
+      try {
+        const resp = await fetch(`${API_URL}/profile/public/${username}`);
+        if (resp.ok) {
+          currentPublicProfile = await resp.json();
+          displayPublicProfileData(currentPublicProfile);
+        }
+      } catch (err) {
+        console.error("Unable to load public profile: ", err);
+      }
+    }
+    
+    function displayPublicProfileData(data) {
+      document.getElementById("pub-avatar").src = data.github.avatar_url || "https://avatars.githubusercontent.com/u/9919?v=4";
+      document.getElementById("pub-fullname").innerText = data.full_name || data.username;
+      document.getElementById("pub-role").innerText = data.profile.target_role || "Software Engineer";
+      document.getElementById("pub-stats").innerText = `GitHub Handle: @${data.username} | Experience: ${data.profile.experience_years} years`;
+      
+      document.getElementById("pub-rec-score").innerText = `${data.report.overall_score}/100`;
+      document.getElementById("pub-rec-verdict").innerText = data.report.roadmap.verdict || "Strong Hire";
+      document.getElementById("pub-rec-salary").innerText = `$${(data.report.predicted_salary || 115000).toLocaleString()}/yr`;
+      
+      const comm = data.report.committee || {};
+      const agents = comm.agents || {};
+      const commGrid = document.getElementById("pub-rec-committee-grid");
+      
+      if (Object.keys(agents).length > 0) {
+        commGrid.innerHTML = Object.entries(agents).map(([key, agent]) => {
+          let badgeColor = "text-blue-400";
+          if (agent.vote === "Strong Hire") badgeColor = "text-green-400";
+          else if (agent.vote === "Hire") badgeColor = "text-indigo-400";
+          else if (agent.vote === "Maybe") badgeColor = "text-yellow-400";
+          else if (agent.vote === "Reject") badgeColor = "text-red-400";
+
+          return `
+            <div class="glass-card-3d rounded-2xl p-5 flex flex-col gap-3 tilt-card">
+              <div class="flex justify-between items-start border-b border-white/5 pb-2.5">
+                <div>
+                  <h4 class="text-xs font-black font-outfit text-white">${agent.name}</h4>
+                  <span class="text-[8px] font-bold uppercase tracking-wider text-gray-400">${agent.role}</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-[10px] font-black uppercase ${badgeColor}">${agent.vote}</span>
+                  <span class="block text-[7px] text-gray-500 font-light mt-0.5">Confidence: ${agent.confidence}%</span>
+                </div>
+              </div>
+              <div class="text-xs font-light text-gray-300 leading-relaxed flex flex-col gap-2">
+                <p class="italic text-[11px]">"${agent.recommendations}"</p>
+                <div>
+                  <span class="text-[8px] font-bold text-green-400 uppercase block mb-0.5">Strengths</span>
+                  <ul class="list-disc list-inside text-gray-400 text-[9px] flex flex-col gap-0.5">
+                    ${(agent.strengths || []).map(s => `<li>${s}</li>`).join("")}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      } else {
+        commGrid.innerHTML = `<div class="col-span-1 md:col-span-3 text-center text-gray-400 text-sm py-12">No committee feedback matches found.</div>`;
+      }
+      
+      const repos = data.github.repositories || [];
+      const projGrid = document.getElementById("pub-rec-projects-list");
+      projGrid.innerHTML = repos.map(r => `
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2">
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-gray-200 text-xs">${r.name}</span>
+            <span class="text-[8px] px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold uppercase">Level ${r.maturity_level} Maturity</span>
+          </div>
+          <p class="text-[10px] text-gray-400 font-light">${r.maturity_explanation || 'Repository structure conforms to guidelines.'}</p>
+        </div>
+      `).join("");
+      
+      const warningsList = document.getElementById("pub-rec-rejection-list");
+      const rejectionreasons = (data.report.roadmap.diagnosis && data.report.roadmap.diagnosis.rejection_reasons) || [
+        "Lacks formal continuous deployment configs (GitHub Actions, AWS pipelines).",
+        "No structured unit testing setup found on core project repositories."
+      ];
+      warningsList.innerHTML = rejectionreasons.map(r => `<li>${r}</li>`).join("");
+      
+      const road30 = document.getElementById("pub-cand-road-30");
+      const road90 = document.getElementById("pub-cand-road-90");
+      
+      const plan30 = data.report.roadmap.plan_30_days || ["Write Multi-Stage Dockerfiles for active APIs.", "Integrate standard unit testing files."];
+      const plan90 = data.report.roadmap.plan_90_days || ["Configure Redis caching databases.", "Add CI/CD automation pipelines."];
+      
+      road30.innerHTML = plan30.map(p => `<li>${p}</li>`).join("");
+      road90.innerHTML = plan90.map(p => `<li>${p}</li>`).join("");
+      
+      const twinGrid = document.getElementById("pub-cand-twins");
+      const twins = data.career_twins || {};
+      
+      twinGrid.innerHTML = Object.entries(twins).map(([key, t]) => `
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col gap-2">
+          <div class="flex justify-between items-center border-b border-white/5 pb-2">
+            <span class="font-bold text-gray-200 text-xs uppercase">${t.track_name} Simulation</span>
+            <span class="text-[10px] font-bold text-green-400">${Math.round(t.success_probability * 100)}% Match</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-[10px] font-light mt-1">
+            <div>
+              <span class="text-[8px] text-gray-500 uppercase tracking-wider font-semibold block">Missing stack</span>
+              <span class="text-red-400 font-medium">${t.missing_skills.slice(0, 3).join(", ") || 'None'}</span>
+            </div>
+            <div>
+              <span class="text-[8px] text-gray-500 uppercase tracking-wider font-semibold block">Estimated study timeline</span>
+              <span class="text-indigo-300 font-medium">${t.time_required_weeks} weeks</span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+      
+      togglePublicMode('recruiter');
+      setTimeout(init3dTilt, 50);
+    }
+    
+    function togglePublicMode(mode) {
+      const rec = document.getElementById("pub-recruiter-section");
+      const cand = document.getElementById("pub-candidate-section");
+      const btnRec = document.getElementById("btn-pub-rec");
+      const btnCand = document.getElementById("btn-pub-cand");
+      
+      if (mode === 'recruiter') {
+        rec.classList.remove("hidden");
+        cand.classList.add("hidden");
+        btnRec.className = "px-4 py-2 bg-indigo-600 text-white text-[9px] font-bold uppercase rounded-lg transition-all";
+        btnCand.className = "px-4 py-2 text-gray-400 hover:text-gray-300 text-[9px] font-bold uppercase rounded-lg transition-all";
+      } else {
+        rec.classList.add("hidden");
+        cand.classList.remove("hidden");
+        btnRec.className = "px-4 py-2 text-gray-400 hover:text-gray-300 text-[9px] font-bold uppercase rounded-lg transition-all";
+        btnCand.className = "px-4 py-2 bg-indigo-600 text-white text-[9px] font-bold uppercase rounded-lg transition-all";
+      }
+    }
+
+    // Initialize triggers
+    window.addEventListener('load', () => {
+      // Check query parameters for public profile mode
+      const urlParams = new URLSearchParams(window.location.search);
+      const profileUser = urlParams.get('profile');
+      if (profileUser) {
+        document.getElementById("view-login").classList.add("hidden");
+        document.getElementById("main-header").classList.add("hidden");
+        switchTab("public-profile");
+        loadPublicProfile(profileUser);
+        return;
+      }
+
+      checkAuthenticationState();
+      init3dTilt();
+      
+      // Initialize WebGL scenes once on page load (with fallback sizes since they might be hidden at startup)
+      initHero3dGlobe();
+      initDashboardScoreOrb();
+      initGithub3dUniverse([]);
+    });
+  </script>
+</body>
+</html>
