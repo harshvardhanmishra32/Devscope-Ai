@@ -57,6 +57,12 @@ export default function GithubScanner() {
       if (response.ok) {
         const result = await response.json();
         setData(result);
+        try {
+          localStorage.setItem('devscope_github_score', String(result.github_score || 84));
+          localStorage.setItem('devscope_github_username', username);
+        } catch (e) {
+          console.warn("Storage access failed:", e);
+        }
       } else {
         throw new Error("API scan failed.");
       }
@@ -98,6 +104,12 @@ export default function GithubScanner() {
             }
           ]
         });
+        try {
+          localStorage.setItem('devscope_github_score', '84');
+          localStorage.setItem('devscope_github_username', username);
+        } catch (e) {
+          console.warn("Storage access failed:", e);
+        }
         setLoading(false);
       }, 1200);
     } finally {

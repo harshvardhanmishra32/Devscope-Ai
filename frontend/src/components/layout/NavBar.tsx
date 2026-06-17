@@ -86,8 +86,18 @@ export default function NavBar() {
   }, [pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem('devscope_token');
-    localStorage.removeItem('devscope_demo_mode');
+    try {
+      localStorage.removeItem('devscope_token');
+      localStorage.removeItem('devscope_demo_mode');
+      localStorage.removeItem('devscope_github_score');
+      localStorage.removeItem('devscope_github_username');
+      localStorage.removeItem('devscope_resume_score');
+      localStorage.removeItem('devscope_resume_skills');
+      localStorage.removeItem('devscope_interview_score');
+      localStorage.removeItem('devscope_interview_track');
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+    }
     router.replace('/');
   };
 

@@ -97,6 +97,12 @@ export default function InterviewSimulator() {
         setMessages(prev => [...prev, { role: 'interviewer', text: result.question }]);
         if (result.finished) {
           setFinished(true);
+          try {
+            localStorage.setItem('devscope_interview_score', String(result.score || 85));
+            localStorage.setItem('devscope_interview_track', track);
+          } catch (e) {
+            console.warn("Storage access failed:", e);
+          }
         }
       } else {
         throw new Error("Unable to submit response.");
@@ -128,6 +134,12 @@ export default function InterviewSimulator() {
             score = Math.max(15, Math.min(95, score));
 
             setFinished(true);
+            try {
+              localStorage.setItem('devscope_interview_score', String(score));
+              localStorage.setItem('devscope_interview_track', track);
+            } catch (e) {
+              console.warn("Storage access failed:", e);
+            }
             return [...allMsgs, {
               role: 'interviewer' as const,
               text: `Thank you for completing this mock interview. Your score is ${score}%.`

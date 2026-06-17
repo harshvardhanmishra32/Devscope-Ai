@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 
@@ -47,25 +47,43 @@ function RingScore({ score, size = 120, stroke = 10, color = '#6366f1', label, s
 }) {
   const [animate, setAnimate] = useState(false);
   const count = useCounter(score, 1800, animate);
-  useEffect(() => { const t = setTimeout(() => setAnimate(true), 300); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => setAnimate(true), 300);
+    return () => clearTimeout(t);
+  }, []);
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
-  const offset = circ - (count / 100) * circ;
+  const offset = score > 0 ? circ - (count / 100) * circ : circ;
+
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
-          <circle
-            cx={size / 2} cy={size / 2} r={r} fill="none"
-            stroke={color} strokeWidth={stroke}
-            strokeDasharray={circ} strokeDashoffset={offset}
-            strokeLinecap="round"
-            style={{ transition: 'stroke-dashoffset 0.05s linear', filter: `drop-shadow(0 0 6px ${color}80)` }}
-          />
+          {score > 0 ? (
+            <circle
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke={color} strokeWidth={stroke}
+              strokeDasharray={circ} strokeDashoffset={offset}
+              strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 0.05s linear', filter: `drop-shadow(0 0 6px ${color}80)` }}
+            />
+          ) : (
+            <circle
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke="rgba(255,255,255,0.1)" strokeWidth={stroke}
+              strokeDasharray="4 6"
+              className="animate-spin"
+              style={{ animationDuration: '20s' }}
+            />
+          )}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-2xl font-black text-white font-['Outfit']">{count}<span className="text-base text-gray-400">%</span></span>
+          {score > 0 ? (
+            <span className="text-2xl font-black text-white font-['Outfit']">{count}<span className="text-base text-gray-400">%</span></span>
+          ) : (
+            <span className="text-lg font-bold text-gray-500 font-['Outfit']">--</span>
+          )}
         </div>
       </div>
       <span className="text-xs font-bold text-gray-300 uppercase tracking-wider text-center">{label}</span>
@@ -78,54 +96,167 @@ export default function Dashboard() {
   const { isReady } = useAuthGuard();
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [isReset, setIsReset] = useState(false);
-  const [ringKey, setRingKey] = useState(0); // increment to remount rings from 0
+  const [moduleStatus, setModuleStatus] = useState({
+    github: { completed: false, score: 0, username: '' },
+    resume: { completed: false, score: 0, skillsCount: 0 },
+    interview: { completed: false, score: 0, track: '' }
+  });
 
   useEffect(() => {
     async function fetchReport() {
+      // 1. Check local storage tokens first
+      const githubScoreVal = localStorage.getItem('devscope_github_score');
+      const githubUserVal = localStorage.getItem('devscope_github_username');
+      const resumeScoreVal = localStorage.getItem('devscope_resume_score');
+      const resumeSkillsVal = localStorage.getItem('devscope_resume_skills');
+      const interviewScoreVal = localStorage.getItem('devscope_interview_score');
+      const interviewTrackVal = localStorage.getItem('devscope_interview_track');
+
+      const hasGithub = githubScoreVal !== null;
+      const hasResume = resumeScoreVal !== null;
+      const hasInterview = interviewScoreVal !== null;
+
+      const githubScore = hasGithub ? parseInt(githubScoreVal!) : 0;
+      const resumeScore = hasResume ? parseInt(resumeScoreVal!) : 0;
+      const interviewScore = hasInterview ? parseInt(interviewScoreVal!) : 0;
+
+      const resumeSkills = resumeSkillsVal ? JSON.parse(resumeSkillsVal!) : [];
+
+      setModuleStatus({
+        github: { completed: hasGithub, score: githubScore, username: githubUserVal || '' },
+        resume: { completed: hasResume, score: resumeScore, skillsCount: resumeSkills.length },
+        interview: { completed: hasInterview, score: interviewScore, track: interviewTrackVal || '' }
+      });
+
       try {
         const token = localStorage.getItem('devscope_token');
         if (!token) throw new Error('No token');
+        
+        // Attempt to call public backend if online
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/reports/latest`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        
         if (response.ok) {
           setReport(await response.json());
-        } else throw new Error('Backend unavailable');
+          setLoading(false);
+          return;
+        } else {
+          throw new Error('Backend unavailable');
+        }
       } catch {
-        // Premium demo data
+        // Fallback: build dynamic dashboard profile using LocalStorage telemetry
+        const completedCount = (hasGithub ? 1 : 0) + (hasResume ? 1 : 0) + (hasInterview ? 1 : 0);
+
+        if (completedCount === 0) {
+          // Keep report as null to trigger the uninitialized screen
+          setReport(null);
+          setLoading(false);
+          return;
+        }
+
+        // Weighted intelligence scoring
+        const overallScore = Math.round((githubScore + resumeScore + interviewScore) / completedCount);
+        const hiringPct = Math.min(95, Math.max(15, Math.round(overallScore * 0.95)));
+        const salaryVal = overallScore > 0 ? 80000 + (overallScore * 850) : 0;
+
+        let verdict = 'Awaiting Telemetry';
+        if (overallScore >= 85) verdict = 'Strong Hire';
+        else if (overallScore >= 70) verdict = 'Hire';
+        else if (overallScore >= 50) verdict = 'Potential Hire';
+        else if (overallScore > 0) verdict = 'Development Needed';
+
+        // Custom Strengths
+        const strengths = [];
+        if (hasGithub) strengths.push(`Clean software structure verified on GitHub profile @${githubUserVal}.`);
+        if (hasResume) strengths.push(`Premium keyword alignment checked in ATS audit (${resumeSkills.slice(0, 4).join(', ')}).`);
+        if (hasInterview) strengths.push(`Solid system architectures proposed in ${interviewTrackVal} interview.`);
+        if (strengths.length === 0) strengths.push('No analysis signals completed yet.');
+
+        // Custom Opportunities
+        const weaknesses = [];
+        if (!hasGithub) weaknesses.push('GitHub metrics unanalyzed. Launch scout telemetry scan.');
+        if (!hasResume) weaknesses.push('ATS compatibility unchecked. Scan resume format density.');
+        if (!hasInterview) weaknesses.push('Interviewer screen pending. Complete mock session.');
+        if (weaknesses.length === 0) {
+          weaknesses.push('Integrate automated test coverages (Jest / PyTest) inside frontend.');
+          weaknesses.push('Strengthen infrastructure setup configurations (Terraform / K8s).');
+        }
+
+        // Executive panel reports
+        const recruiterFeedback = hasResume 
+          ? `ATS structure parses correctly. Extracted ${resumeSkills.length} key developer credentials. Visual styling matches premium standards.`
+          : `Awaiting resume parsing telemetry to evaluate core ATS fit, key skill vectors, and layout formatting.`;
+
+        const emFeedback = hasGithub
+          ? `Repo profile density is looking solid for @${githubUserVal}. Code structures follow clean design principles.`
+          : `Awaiting GitHub repository scanning to evaluate code quality, documentation density, and repo activity.`;
+
+        const ctoFeedback = hasInterview
+          ? `Demonstrated clear engineering reasoning in ${interviewTrackVal} mock session. Solid response handling regarding asynchronous concurrency.`
+          : `Awaiting AI mock interview session telemetry to audit system design reasoning and technical communications.`;
+
+        // Diagnostic action plans
+        const plan30 = [];
+        if (!hasResume) plan30.push('Configure ATS optimization scanner and upload resume PDF.');
+        else plan30.push('Refactor resume header grids and key skills placement.');
+        
+        if (!hasGithub) plan30.push('Perform GitHub scan telemetry.');
+        else plan30.push('Increase code coverage inside core active repos.');
+
+        const plan90 = [];
+        if (!hasInterview) plan90.push('Execute mock system design interview.');
+        else plan90.push('Study distributed databases, indexing, and Redis caches.');
+        plan90.push('Integrate production multi-stage Docker configurations.');
+
+        const plan365 = [
+          'Target mid-to-senior levels in enterprise engineering.',
+          'Obtain AWS Solutions Architect / Kubernetes professional certs.'
+        ];
+
         setReport({
-          overall_score: 87,
-          hiring_probability: 0.89,
-          predicted_salary: 132000,
-          strengths: [
-            'Clean architectural patterns across all GitHub repositories.',
-            'High-density modern framework keywords in resume.',
-            'Significant open-source commit activity.',
-          ],
-          weaknesses: [
-            'Missing cloud deployment configs (Terraform / AWS).',
-            'No automated testing suites on frontend repos.',
-          ],
+          overall_score: overallScore,
+          hiring_probability: hiringPct / 100,
+          predicted_salary: salaryVal,
+          strengths,
+          weaknesses,
           roadmap: {
-            verdict: 'Strong Hire',
+            verdict,
             personas: {
-              technical_recruiter: 'Excellent ATS matching. Clear structure, strong impact descriptions, and zero grammatical bugs.',
-              engineering_manager: 'Clean Python code, proper READMEs — would like to see more unit tests integrated.',
-              cto: 'Strong microservices understanding. Next: Redis caching + infrastructure pipelines.',
+              technical_recruiter: recruiterFeedback,
+              engineering_manager: emFeedback,
+              cto: ctoFeedback,
             },
-            plan_30_days: ['Build multi-stage Dockerfiles.', 'Integrate Jest testing into dashboard repo.'],
-            plan_90_days: ['Study Kubernetes manifest specs.', 'Implement distributed caching patterns.'],
-            plan_365_days: ['Obtain AWS Solutions Architect cert.', 'Target senior software engineer roles.'],
-          },
+            plan_30_days: plan30,
+            plan_90_days: plan90,
+            plan_365_days: plan365,
+          }
         });
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
-  }, []);
+
+    if (isReady) {
+      fetchReport();
+    }
+  }, [isReady, isReset]);
+
+  const handleClearData = () => {
+    try {
+      localStorage.removeItem('devscope_github_score');
+      localStorage.removeItem('devscope_github_username');
+      localStorage.removeItem('devscope_resume_score');
+      localStorage.removeItem('devscope_resume_skills');
+      localStorage.removeItem('devscope_interview_score');
+      localStorage.removeItem('devscope_interview_track');
+    } catch (e) {
+      console.warn("Storage access failed:", e);
+    }
+    setReport(null);
+    setIsReset(true);
+  };
 
   if (!isReady || loading) {
     return (
@@ -134,42 +265,159 @@ export default function Dashboard() {
           <div className="absolute inset-0 rounded-full border-2 border-indigo-500/20" />
           <div className="absolute inset-0 rounded-full border-2 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent animate-spin" />
         </div>
-        <p className="text-xs text-gray-500 uppercase tracking-widest animate-pulse">Initializing AI Engine...</p>
+        <p className="text-xs text-gray-500 uppercase tracking-widest animate-pulse">Initializing OS Channels...</p>
       </div>
     );
   }
 
-  if (isReset) {
+  // ── RENDER UNINITIALIZED STATE (Empty Dashboard) ──
+  if (!report) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}
-          className="w-20 h-20 rounded-full border-2 border-dashed border-indigo-500/30 flex items-center justify-center"
+      <div className="flex flex-col gap-10 py-6 relative z-10">
+        
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -15 }} animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-6"
         >
-          <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold uppercase tracking-widest animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Diagnostic Telemetry Pending
+              </span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black font-['Outfit'] tracking-tight text-white">Developer Intelligence OS</h1>
+            <p className="text-gray-400 text-xs font-light mt-1">Initialize telemetry scanners to compile your professional score metrics.</p>
+          </div>
+          {isReset && (
+            <button
+              onClick={() => setIsReset(false)}
+              className="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg"
+            >
+              Start Diagnostic Audit
+            </button>
+          )}
         </motion.div>
-        <div>
-          <h2 className="text-2xl font-black font-['Outfit'] text-white">Analysis Cleared</h2>
-          <p className="text-gray-400 text-sm font-light mt-1">All previous scores have been reset to zero.</p>
-        </div>
-        <div className="flex gap-3 flex-wrap justify-center">
-          <button
-            onClick={() => { setIsReset(false); setRingKey(k => k + 1); }}
-            className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-lg"
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Column: Offline Visualizer */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            className="lg:col-span-4 glass-panel rounded-2xl p-8 flex flex-col items-center justify-center text-center relative overflow-hidden min-h-[380px]"
           >
-            Run New Analysis
-          </button>
-          <a href="/github" className="px-6 py-3 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 text-white font-semibold text-xs uppercase tracking-wider transition-all">
-            Scan GitHub First
-          </a>
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
+            
+            {/* Spinning Radar Widget */}
+            <div className="relative w-44 h-44 mb-6 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border border-dashed border-indigo-500/20 animate-spin" style={{ animationDuration: '30s' }} />
+              <div className="absolute inset-4 rounded-full border border-dotted border-indigo-500/30 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+              <div className="absolute inset-8 rounded-full border border-indigo-500/10" />
+              <div className="absolute w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+              <div className="absolute w-3 h-3 rounded-full bg-indigo-500/50" />
+              
+              {/* Telemetry Status text */}
+              <div className="absolute bottom-4 text-[9px] uppercase tracking-widest text-indigo-400 font-bold animate-pulse">
+                Telemetry Idle
+              </div>
+            </div>
+
+            <h3 className="text-base font-extrabold text-white font-['Outfit'] mb-1">Command Core Offline</h3>
+            <p className="text-xs text-gray-500 font-light max-w-xs leading-relaxed">
+              No analysis data has been compiled yet. Run the three diagnostic modules to calculate your predictive hiring score.
+            </p>
+          </motion.div>
+
+          {/* Right Column: Diagnostic Module Actions */}
+          <div className="lg:col-span-8 flex flex-col gap-5">
+            {[
+              {
+                id: 'github',
+                title: 'GitHub Scout Intelligence',
+                desc: 'Audits repositories, scans commit frequency, and measures primary language density to evaluate technical depth.',
+                badge: 'GitHub Core',
+                color: 'blue',
+                icon: (
+                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                ),
+                link: '/github',
+                btnText: 'Run Repo Scanner'
+              },
+              {
+                id: 'resume',
+                title: 'ATS Resume Auditor',
+                desc: 'Parses PDF resume formats, calculates ATS compliance scores, and extracts developer skill alignments.',
+                badge: 'ATS Parser',
+                color: 'purple',
+                icon: (
+                  <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                ),
+                link: '/resume',
+                btnText: 'Run ATS Audit'
+              },
+              {
+                id: 'interview',
+                title: 'AI Mock Interview Simulator',
+                desc: 'Practices real-time interactive technical, system design, and communication screens with dynamic feedback.',
+                badge: 'Interview Bot',
+                color: 'pink',
+                icon: (
+                  <svg className="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                ),
+                link: '/interview',
+                btnText: 'Launch Simulator'
+              }
+            ].map((mod, idx) => (
+              <motion.div
+                key={mod.id}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                className="glass-panel border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 hover:border-white/10 hover:bg-white/5 transition-all"
+              >
+                <div className="flex gap-4 items-start">
+                  <div className={`w-12 h-12 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center shrink-0`}>
+                    {mod.icon}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-base font-extrabold text-white font-['Outfit']">{mod.title}</h3>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 bg-white/5 border border-white/5 px-2 py-0.5 rounded-md">
+                        {mod.badge}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-xs font-light mt-1.5 max-w-xl leading-relaxed">{mod.desc}</p>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:items-end gap-2 w-full md:w-auto shrink-0">
+                  <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                    Telemetry Offline
+                  </span>
+                  <a
+                    href={mod.link}
+                    className="w-full md:w-auto text-center px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md"
+                  >
+                    {mod.btnText}
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!report) return <div className="text-center text-red-400 py-12">Failed to load report.</div>;
-
+  // ── RENDER ACTIVE STATE (Dashboard loaded with dynamic telemetry) ──
   const hiringPct = Math.round(report.hiring_probability * 100);
   const salaryK = Math.round(report.predicted_salary / 1000);
   const verdictColor = report.roadmap.verdict.toLowerCase().includes('strong') ? 'text-green-400' : 'text-yellow-400';
@@ -193,13 +441,13 @@ export default function Dashboard() {
           <p className="text-indigo-300/70 text-xs font-light mt-1 tracking-widest uppercase">Real-time Agentic Analysis · Predictive Modeling</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button onClick={() => setIsReset(true)}
+          <button onClick={handleClearData}
             className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg border border-red-500/25 hover:border-red-400/50 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-all"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            Reset
+            Clear Scans
           </button>
           <a href="/resume" className="px-4 py-2 text-xs font-semibold rounded-lg border border-white/10 hover:border-white/20 bg-white/5 text-gray-300 hover:text-white transition-all">
             Resume AI →
@@ -246,15 +494,14 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/5 via-transparent to-purple-600/5 pointer-events-none" />
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-          Multi-Dimensional Analysis Engine
+          Multi-Dimensional Diagnostics
         </h2>
-        {/* key=ringKey forces full remount → counter starts at 0 on every Run New Analysis */}
-        <div key={ringKey} className="flex flex-wrap justify-around gap-8">
+        <div className="flex flex-wrap justify-around gap-8">
           <RingScore score={report.overall_score} color="#6366f1" label="Overall Score" sublabel="Intelligence Index" />
           <RingScore score={hiringPct} color="#22c55e" label="Hire Probability" sublabel="ML Prediction" />
-          <RingScore score={78} color="#a855f7" label="Resume Match" sublabel="ATS Analysis" size={110} />
-          <RingScore score={82} color="#ec4899" label="GitHub Quality" sublabel="Code Intelligence" size={110} />
-          <RingScore score={91} color="#f59e0b" label="Tech Relevance" sublabel="Skill Graph" size={110} />
+          <RingScore score={moduleStatus.resume.completed ? moduleStatus.resume.score : 0} color="#a855f7" label="Resume Match" sublabel="ATS Analysis" size={110} />
+          <RingScore score={moduleStatus.github.completed ? moduleStatus.github.score : 0} color="#ec4899" label="GitHub Quality" sublabel="Code Intelligence" size={110} />
+          <RingScore score={moduleStatus.interview.completed ? moduleStatus.interview.score : 0} color="#f59e0b" label="Interview Score" sublabel="Skill Graph" size={110} />
         </div>
       </motion.div>
 
@@ -266,13 +513,14 @@ export default function Dashboard() {
         <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Explainable AI Pipeline</h2>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {[
-            { label: 'Resume Analysis', pct: '25%', color: 'indigo' },
-            { label: 'GitHub Commits', pct: '30%', color: 'purple' },
-            { label: 'Tech Stack Graph', pct: '25%', color: 'pink' },
-            { label: 'Interview Signal', pct: '20%', color: 'amber' },
+            { label: 'Resume Analysis', pct: moduleStatus.resume.completed ? '25%' : '0%', color: 'indigo' },
+            { label: 'GitHub Commits', pct: moduleStatus.github.completed ? '30%' : '0%', color: 'purple' },
+            { label: 'Tech Stack Graph', pct: (moduleStatus.github.completed || moduleStatus.resume.completed) ? '25%' : '0%', color: 'pink' },
+            { label: 'Interview Signal', pct: moduleStatus.interview.completed ? '20%' : '0%', color: 'amber' },
           ].map((node, i) => (
             <React.Fragment key={node.label}>
               <motion.div
+                key={node.label}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.15 }}
@@ -359,18 +607,18 @@ export default function Dashboard() {
           ].map((p, i) => (
             <motion.div key={p.key}
               initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.15 }}
-              className={`glass-panel rounded-2xl p-6 flex flex-col gap-4 group hover:border-${p.color}-500/40 transition-all border border-white/5 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)]`}
+              className="glass-panel rounded-2xl p-6 flex flex-col gap-4 group hover:border-white/10 transition-all border border-white/5 hover:shadow-[0_0_20px_rgba(0,0,0,0.3)]"
             >
               <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-xl bg-${p.color}-500/15 border border-${p.color}-500/40 flex items-center justify-center`}>
-                  <span className={`text-${p.color}-400 font-black text-xs`}>{p.tag}</span>
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/15 flex items-center justify-center">
+                  <span className="text-white font-black text-xs">{p.tag}</span>
                 </div>
                 <div>
-                  <p className={`text-xs font-black text-${p.color}-300 uppercase tracking-wide`}>{p.role}</p>
-                  <p className="text-[9px] text-gray-600 font-light">{p.sub}</p>
+                  <p className="text-xs font-black text-white uppercase tracking-wide">{p.role}</p>
+                  <p className="text-[9px] text-gray-500 font-light">{p.sub}</p>
                 </div>
               </div>
-              <p className="text-gray-300 text-sm font-light leading-relaxed flex-1">
+              <p className="text-gray-400 text-sm font-light leading-relaxed flex-1">
                 "{(report.roadmap.personas as any)[p.key]}"
               </p>
             </motion.div>
