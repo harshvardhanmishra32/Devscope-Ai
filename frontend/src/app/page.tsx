@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthOverlay from '@/components/auth/AuthOverlay';
 
@@ -22,6 +23,7 @@ const agents = [
 export default function Home() {
   const [showLanding, setShowLanding] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const token = localStorage.getItem('devscope_token');
@@ -29,15 +31,16 @@ export default function Home() {
       window.location.replace('/dashboard');
     } else {
       setShowLanding(true);
-      // Auto-open the modal if navigated here with ?signin=true
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('signin') === 'true') {
-        setShowAuthModal(true);
-        // Clean up the URL without reload
-        window.history.replaceState({}, '', '/');
-      }
     }
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('signin') === 'true') {
+      setShowAuthModal(true);
+      window.history.replaceState({}, '', '/');
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const handleOpen = () => setShowAuthModal(true);
