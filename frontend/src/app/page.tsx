@@ -39,6 +39,12 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleOpen = () => setShowAuthModal(true);
+    window.addEventListener('open-auth-overlay', handleOpen);
+    return () => window.removeEventListener('open-auth-overlay', handleOpen);
+  }, []);
+
   const handleLoginSuccess = () => {
     window.location.replace('/dashboard');
   };

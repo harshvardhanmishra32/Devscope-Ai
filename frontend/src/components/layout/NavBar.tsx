@@ -85,6 +85,14 @@ export default function NavBar() {
     setMobileOpen(false);
   }, [pathname]);
 
+  const handleSignInClick = () => {
+    if (pathname === '/') {
+      window.dispatchEvent(new Event('open-auth-overlay'));
+    } else {
+      router.push('/?signin=true');
+    }
+  };
+
   const handleLogout = () => {
     try {
       localStorage.removeItem('devscope_token');
@@ -98,6 +106,7 @@ export default function NavBar() {
     } catch (e) {
       console.warn("Storage access failed:", e);
     }
+    setIsLoggedIn(false);
     router.replace('/');
   };
 
@@ -200,7 +209,7 @@ export default function NavBar() {
               </>
             ) : (
               <button
-                onClick={() => router.push('/?signin=true')}
+                onClick={handleSignInClick}
                 className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all shadow-md shadow-indigo-600/20 uppercase tracking-wider"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
