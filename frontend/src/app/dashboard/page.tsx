@@ -517,25 +517,33 @@ export default function Dashboard() {
             { label: 'GitHub Commits', pct: moduleStatus.github.completed ? '30%' : '0%', color: 'purple' },
             { label: 'Tech Stack Graph', pct: (moduleStatus.github.completed || moduleStatus.resume.completed) ? '25%' : '0%', color: 'pink' },
             { label: 'Interview Signal', pct: moduleStatus.interview.completed ? '20%' : '0%', color: 'amber' },
-          ].map((node, i) => (
-            <React.Fragment key={node.label}>
-              <motion.div
-                key={node.label}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + i * 0.15 }}
-                className={`flex flex-col items-center gap-2 bg-${node.color}-500/5 border border-${node.color}-500/20 rounded-xl px-6 py-4 min-w-[120px] text-center`}
-              >
-                <span className={`text-[10px] font-bold text-${node.color}-400 uppercase tracking-widest`}>{node.label}</span>
-                <span className="text-2xl font-black text-white font-['Outfit']">{node.pct}</span>
-              </motion.div>
-              {i < 3 && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 + i * 0.15 }}
-                  className="text-gray-600 hidden md:block text-lg font-light"
-                >→</motion.div>
-              )}
-            </React.Fragment>
-          ))}
+          ].map((node, i) => {
+            const colorMaps: Record<string, { bg: string, border: string, text: string }> = {
+              indigo: { bg: 'bg-indigo-500/5', border: 'border-indigo-500/20', text: 'text-indigo-400' },
+              purple: { bg: 'bg-purple-500/5', border: 'border-purple-500/20', text: 'text-purple-400' },
+              pink: { bg: 'bg-pink-500/5', border: 'border-pink-500/20', text: 'text-pink-400' },
+              amber: { bg: 'bg-amber-500/5', border: 'border-amber-500/20', text: 'text-amber-400' },
+            };
+            const styles = colorMaps[node.color] || colorMaps.indigo;
+            return (
+              <React.Fragment key={node.label}>
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.15 }}
+                  className={`flex flex-col items-center gap-2 ${styles.bg} ${styles.border} border rounded-xl px-6 py-4 min-w-[120px] text-center`}
+                >
+                  <span className={`text-[10px] font-bold ${styles.text} uppercase tracking-widest`}>{node.label}</span>
+                  <span className="text-2xl font-black text-white font-['Outfit']">{node.pct}</span>
+                </motion.div>
+                {i < 3 && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 + i * 0.15 }}
+                    className="text-gray-600 hidden md:block text-lg font-light"
+                  >→</motion.div>
+                )}
+              </React.Fragment>
+            );
+          })}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }}
             className="hidden md:block text-gray-600 text-lg"
           >→</motion.div>
