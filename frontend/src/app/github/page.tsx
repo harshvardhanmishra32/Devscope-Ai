@@ -43,6 +43,7 @@ export default function GithubScanner() {
     
     const token = localStorage.getItem('devscope_token');
     
+    let isFallback = false;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/github/scan`, {
         method: "POST",
@@ -60,6 +61,7 @@ export default function GithubScanner() {
         throw new Error("API scan failed.");
       }
     } catch (err) {
+      isFallback = true;
       // Mock fallback data for demonstration if backend is offline
       setTimeout(() => {
         setData({
@@ -98,9 +100,10 @@ export default function GithubScanner() {
         });
         setLoading(false);
       }, 1200);
-      return;
     } finally {
-      setLoading(false);
+      if (!isFallback) {
+        setLoading(false);
+      }
     }
   };
 

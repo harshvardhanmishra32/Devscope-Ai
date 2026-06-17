@@ -57,6 +57,7 @@ export default function ResumeIntelligence() {
 
     const token = localStorage.getItem('devscope_token');
 
+    let isFallback = false;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/resume/upload`, {
         method: "POST",
@@ -79,6 +80,7 @@ export default function ResumeIntelligence() {
         throw new Error("Resume upload failed.");
       }
     } catch (err) {
+      isFallback = true;
       // Mock fallback data for demonstration if backend is offline
       setTimeout(() => {
         setData({
@@ -90,9 +92,10 @@ export default function ResumeIntelligence() {
         });
         setLoading(false);
       }, 1500);
-      return;
     } finally {
-      setLoading(false);
+      if (!isFallback) {
+        setLoading(false);
+      }
     }
   };
 
