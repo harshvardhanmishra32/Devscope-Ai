@@ -2,18 +2,17 @@
 
 # 🧠 DevScope AI
 
-### AI-Powered Developer Intelligence Platform
+### The Intelligent Developer Analytics & Career Platform
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python)](https://python.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)](https://docker.com)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-FF6B6B?style=for-the-badge)](https://langchain.com)
 
-**The moment a recruiter opens DevScope AI, they immediately think:**
-> *"This was built by a serious AI Engineer and Software Engineer."*
+**DevScope AI is a premium portfolio analyzer and multi-agent AI dashboard designed to evaluate developer profiles (GitHub, Resume, and Interview Skills) and simulate a real-world hiring committee's deliberations.**
 
-[🚀 Live Demo](#) · [📖 Docs](./docs) · [🐳 Docker Setup](#-quick-start)
+[🚀 Try Live Demo](https://devscope-ai-self.vercel.app/) · [✉️ Contact Creator](mailto:harshvardhanmishra31@gmail.com) · [📁 Local Setup](#%EF%B8%8F-technical-setup-developer-instructions)
 
 </div>
 
@@ -21,226 +20,151 @@
 
 ## 🎯 What is DevScope AI?
 
-DevScope AI is a **Developer Intelligence Platform** that acts as an AI recruiter, engineering mentor, career coach, and portfolio evaluator — all in one system.
+When recruiters or engineering managers look at candidate profiles, they ask several core questions. DevScope AI answers them automatically using a state-of-the-art multi-agent AI system:
 
-It answers the questions every hiring manager asks:
+* **Hiring Verdict**: Computes a dynamic hiring verdict (**Strong Hire / Hire / Potential Hire**) with a confidence probability percentage.
+* **Explainable AI Deliberations**: Simulates and displays candidate reviews written by a **Technical Recruiter**, **Engineering Manager**, and **CTO**.
+* **ATS & Skills Gap Audit**: Scores formatting, layouts, and scans for keyword optimization compared to industry standards.
+* **AI Mock Interviews**: Simulates realistic developer screens (System Design, Frontend, Backend) with interactive follow-up questions and scores answers.
+* **Growth Roadmaps**: Automatically drafts a custom 30/90/365-day developer career acceleration plan.
 
-| Question | DevScope AI's Answer |
-|---|---|
-| Would I hire this developer? | **Hire / Strong Hire / No Hire** verdict with probability % |
-| What are their strengths? | Explainable AI reasoning with per-signal breakdown |
-| What skills are missing? | ATS gap analysis vs. industry benchmarks |
-| What is their future potential? | 30 / 90 / 365-day career acceleration roadmap |
-| How do they compare to others? | ML-based salary prediction + percentile ranking |
+---
+
+## 🚀 How to Try the App Instantly (For Recruiters)
+
+No setup or registration is required to experience the platform:
+
+1. Open the [Live Demo Link](https://devscope-ai-self.vercel.app/).
+2. Click **Sign In** in the top right corner.
+3. Select **Continue with Google** — we have built a **Google OAuth Simulator** as a fallback. You can type in any mock username or email address and gain immediate access.
+4. Navigate to the **GitHub Scanner**, enter a profile username (e.g. `harshvardhanmishra`), and run a scan.
+5. Visit the **Dashboard** to see the AI Hiring Committee evaluate the candidate based on live data!
 
 ---
 
 ## ✨ Key Features
 
 ### 🤖 Multi-Agent AI System (LangGraph)
-- **Recruiter Agent** — Simulates a technical recruiter, engineering manager, and startup CTO
-- **Resume Agent** — ATS scoring, keyword extraction, formatting quality analysis
-- **GitHub Agent** — Repository analysis, code quality, documentation depth, commit cadence
-- **Interview Agent** — AI-powered mock interviews (Technical / System Design / HR tracks)
-- **Career Coach Agent** — Personalized 30/90/365-day growth roadmap
+* **GitHub Agent** — Scans repository structure, languages, code density, commit history, and highlights technical strengths.
+* **Resume Agent** — Performs ATS keyword matching, layout analysis, and skill density grading.
+* **Interview Agent** — Moderates live coding or system design interviews and grades semantic responses.
+* **Career Coach Agent** — Suggests actionable growth roadmaps to bridge identified skill gaps.
 
-### 📊 Developer Intelligence Dashboard
-- Animated SVG circular progress rings (count from 0 → score)
-- Explainable AI pipeline visualization showing how each signal feeds the final score
-- Colour-coded hiring verdict banner with probability and salary prediction
-- AI Hiring Committee deliberation cards (TR / EM / CTO)
-- Career acceleration timeline
+### 🎨 Premium Glassmorphic UI/UX
+* Apple Vision Pro-inspired glassmorphism styles with smooth parallax layers.
+* Dynamic dashboard telemetry: displays an elegant **"Demo Mode"** (Telemetry Offline) state if no scans have been performed yet, inviting users to run scans.
+* Beautiful animated SVG progress score rings and staggered Framer Motion transitions.
 
-### 🔐 Authentication System
-- Email / Password sign up & sign in
-- Google OAuth (real + simulator mode)
-- JWT-based session management
-- Individual data isolation per user
-- Protected routes with auth guard
-
-### 🎨 Premium UI/UX
-- Apple Vision Pro–inspired glassmorphism
-- Framer Motion animations with staggered reveals
-- Animated nav with active page indicator (sliding underline glow)
-- Mobile-responsive hamburger menu
-- Scroll-aware frosted glass header
+### 🔐 Auth & Security
+* Full standard email/password authentication + Google OAuth Integration.
+* Secure JWT session token management and complete user-session data isolation.
 
 ---
 
-## 🏗️ Architecture
+## 🛠️ Tech Stack
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      DEVSCOPE AI                            │
-├──────────────────┬──────────────────────────────────────────┤
-│   Frontend       │   Backend                                 │
-│   Next.js 14     │   FastAPI + LangGraph                    │
-│   TypeScript     │   Python 3.11                            │
-│   Framer Motion  │   PostgreSQL + Redis                     │
-│   Three.js       │   Celery (async tasks)                   │
-│   TailwindCSS    │   JWT Auth                               │
-└──────────────────┴──────────────────────────────────────────┘
-         │                        │
-         └──────────┬─────────────┘
-                    │
-            Docker Compose
-```
-
-### Tech Stack
-
-| Layer | Technology |
+| Layer | Technologies |
 |---|---|
-| **Frontend** | Next.js 14, TypeScript, Framer Motion, Vanilla CSS |
-| **Backend** | FastAPI, Python 3.11, LangGraph, LangChain |
-| **Database** | PostgreSQL, Redis (caching + queues) |
-| **AI/ML** | LangGraph multi-agent, OpenAI GPT-4, ML salary prediction |
-| **Auth** | JWT tokens, Google OAuth 2.0, bcrypt |
-| **DevOps** | Docker, Docker Compose, Celery workers |
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/harshvardhanmishra/DevscopeAI.git
-cd DevscopeAI
-```
-
-### 2. Configure environment
-```bash
-# Copy the example env files
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-
-# Edit backend/.env and add your API keys:
-# OPENAI_API_KEY=sk-...
-# SECRET_KEY=your-secret-key
-# GOOGLE_CLIENT_ID=your-google-client-id (optional)
-```
-
-### 3. Run with Docker Compose
-```bash
-docker-compose up --build -d
-```
-
-### 4. Access the platform
-| Service | URL |
-|---|---|
-| 🌐 Frontend | http://localhost:3000 |
-| ⚙️ Backend API | http://localhost:8000 |
-| 📖 API Docs | http://localhost:8000/docs |
-
----
-
-## 📁 Project Structure
-
-```
-DevscopeAI/
-├── frontend/                   # Next.js 14 application
-│   ├── src/
-│   │   ├── app/                # App Router pages
-│   │   │   ├── page.tsx        # Landing page + auth gate
-│   │   │   ├── dashboard/      # Intelligence OS dashboard
-│   │   │   ├── github/         # GitHub scanner
-│   │   │   ├── resume/         # ATS resume scorer
-│   │   │   ├── interview/      # AI interview simulator
-│   │   │   └── about/          # About & creator
-│   │   ├── components/
-│   │   │   ├── auth/           # AuthOverlay (sign in / sign up)
-│   │   │   └── layout/         # NavBar
-│   │   └── hooks/
-│   │       └── useAuthGuard.ts # Route protection hook
-│   └── Dockerfile
-│
-├── backend/                    # FastAPI application
-│   ├── app/
-│   │   ├── api/v1/             # REST API routes
-│   │   │   ├── auth.py         # JWT + Google OAuth
-│   │   │   ├── reports.py      # Intelligence reports
-│   │   │   ├── github.py       # GitHub analysis
-│   │   │   ├── resume.py       # Resume processing
-│   │   │   └── interview.py    # AI interviewer
-│   │   ├── agents/             # LangGraph multi-agent system
-│   │   ├── models/             # SQLAlchemy ORM models
-│   │   └── core/               # Config, security, database
-│   └── Dockerfile
-│
-├── docker-compose.yml          # Full stack orchestration
-└── README.md
-```
-
----
-
-## 🌐 API Reference
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/v1/auth/signup` | Create account |
-| `POST` | `/api/v1/auth/token` | Sign in (get JWT) |
-| `POST` | `/api/v1/auth/google-login` | Google OAuth |
-| `GET` | `/api/v1/reports/latest` | Get latest analysis |
-| `POST` | `/api/v1/github/analyze` | Analyze GitHub profile |
-| `POST` | `/api/v1/resume/upload` | Upload & score resume |
-| `POST` | `/api/v1/interview/start` | Start AI interview |
-| `POST` | `/api/v1/interview/respond` | Submit answer |
-
-Full interactive docs: **http://localhost:8000/docs**
-
----
-
-## 🔐 Environment Variables
-
-### Backend (`backend/.env`)
-```env
-# Database
-DATABASE_URL=postgresql://devscope:devscope@db:5432/devscope
-
-# Security
-SECRET_KEY=your-super-secret-key-here
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
-
-# AI
-OPENAI_API_KEY=sk-your-openai-key
-
-# Google OAuth (optional)
-GOOGLE_CLIENT_ID=your-google-client-id
-
-# Redis
-REDIS_URL=redis://redis:6379
-```
-
-### Frontend (`frontend/.env.local`)
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
-```
+| **Frontend** | Next.js 14 (App Router), TypeScript, Framer Motion, Vanilla CSS |
+| **Backend** | FastAPI (Python 3.12), LangGraph, LangChain |
+| **Database & Cache** | PostgreSQL, Redis (queues & caching) |
+| **Task Queue** | Celery (async worker pipelines) |
+| **DevOps** | Docker, Docker Compose |
 
 ---
 
 ## 👨‍💻 About the Creator
 
-**Harshvardhan Mishra** — Computer Science Student & AI Engineer
+**Harshvardhan Mishra**  
+*Computer Science Student & AI Engineer*  
 
-Passionate about Artificial Intelligence, Software Engineering, System Design, and building impactful developer tools. DevScope AI is my flagship project combining AI engineering, developer analytics, and career intelligence into one platform.
+Passionate about Artificial Intelligence, Multi-Agent Networks, and high-fidelity product design. DevScope AI is my flagship project demonstrating full-stack engineering competency, distributed background processing, and explainable AI scoring architectures.
 
-📧 **harshvardhanmishra31@gmail.com**
-🐙 **[@HarshvardhanMishra](https://github.com/harshvardhanmishra)**
+* 📧 **harshvardhanmishra31@gmail.com**
+* 🐙 **[GitHub Profile](https://github.com/harshvardhanmishra32)**
 
 ---
 
-## 📄 License
+<details>
+<summary>🛠️ <b>Technical Setup & Developer Instructions (Local Run)</b></summary>
 
-MIT License — see [LICENSE](./LICENSE) for details.
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/harshvardhanmishra32/Devscope-Ai.git
+cd Devscope-Ai
+```
+
+### 2. Configure Environment
+```bash
+# Copy env templates
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env.local
+```
+Open `backend/.env` and configure your API Keys:
+* `OPENAI_API_KEY`: Your OpenAI key.
+* `SECRET_KEY`: A random string for secure JWT tokens.
+
+### 3. Build & Run Stack
+```bash
+docker-compose up --build -d
+```
+
+### 4. Port Mapping
+* 🌐 **Frontend URL**: http://localhost:3000
+* ⚙️ **Backend URL**: http://localhost:8000
+* 📖 **Swagger API Docs**: http://localhost:8000/docs
+
+</details>
+
+<details>
+<summary>📂 <b>Folder Structure</b></summary>
+
+```
+Devscope-Ai/
+├── frontend/                   # Next.js 14 App Router application
+│   ├── src/
+│   │   ├── app/                # Pages (Dashboard, GitHub, Resume, Interview, About)
+│   │   ├── components/         # Glassmorphic components & Auth overlays
+│   │   └── hooks/              # Auth guarding & route locks
+│   └── Dockerfile
+│
+├── backend/                    # FastAPI python application
+│   ├── app/
+│   │   ├── api/v1/             # Endpoints (Auth, GitHub scanner, Resume ATS, Interview)
+│   │   ├── agents/             # LangGraph multi-agent orchestrations
+│   │   ├── models/             # SQLAlchemy ORM database models
+│   │   └── core/               # App configuration, security, database sessions
+│   └── Dockerfile
+│
+├── docker-compose.yml          # Container orchestration
+└── README.md
+```
+
+</details>
+
+<details>
+<summary>🌐 <b>REST API Endpoints</b></summary>
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/auth/signup` | Register a new user |
+| `POST` | `/api/v1/auth/token` | Retrieve a secure JWT session token |
+| `POST` | `/api/v1/auth/google-login` | Authenticate using Google OAuth |
+| `GET` | `/api/v1/reports/latest` | Fetch user's active dashboard evaluation |
+| `POST` | `/api/v1/github/analyze` | Start async GitHub analysis |
+| `POST` | `/api/v1/resume/upload` | Parse resume and generate ATS scores |
+| `POST` | `/api/v1/interview/start` | Start an interactive AI interview screen |
+| `POST` | `/api/v1/interview/respond` | Grade a response and fetch follow-up question |
+
+</details>
 
 ---
 
 <div align="center">
   Built with ❤️ by <strong>Harshvardhan Mishra</strong>
   <br/>
-  <sub>DevScope AI — Making developers visible to the world.</sub>
+  <sub>DevScope AI — Visualizing developer intelligence.</sub>
 </div>
